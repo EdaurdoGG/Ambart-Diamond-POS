@@ -1,0 +1,331 @@
+/* Reset y tipografía */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background: #ffffea;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Contenedor principal */
+.dashboard-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  background: #fff8f0;
+  border: 6px solid rgba(0,0,0,0.1);
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background: linear-gradient(to bottom, #985008, #7c420b);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 25px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.logo img.icon {
+  width: 28px;
+  margin-right: 10px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  padding-top: 10px;
+}
+
+.menu-item {
+  padding: 15px 20px;
+  color: #fff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s;
+}
+
+.menu-item img.icon {
+  width: 18px;
+  height: 18px;
+}
+
+.menu-item:hover,
+.menu-item.active {
+  background-color: rgba(255,255,255,0.1);
+}
+
+.menu-separator {
+  border-top: 1px solid rgba(255,255,255,0.3);
+  margin: 15px 0;
+}
+
+.menu-item.logout {
+  color: #e74c3c;
+}
+
+.menu-item.logout:hover {
+  background-color: rgba(231, 76, 60, 0.2);
+}
+
+/* Main content */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 25px;
+  background: #fff8f0;
+}
+
+/* Topbar */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.topbar h2 {
+  color: #985008;
+  font-size: 24px;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-profile .notification {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #985008;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.user-name {
+  font-weight: bold;
+}
+
+.user-role {
+  color: gray;
+}
+
+/* Notificaciones */
+.notifications-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.notification-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  transition: transform 0.2s;
+}
+
+.notification-card:hover {
+  transform: translateY(-5px);
+}
+
+.notification-card h3 {
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #555;
+}
+
+.notification-card p {
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.notification-card .alert {
+  font-weight: bold;
+  color: #e74c3c;
+}
+
+/* Diferentes niveles de alerta */
+.notification-card.low-stock {
+  border-left: 5px solid #f39c12;
+}
+
+.notification-card.low-stock .alert {
+  color: #f39c12;
+}
+
+.notification-card.critical-stock {
+  border-left: 5px solid #e74c3c;
+}
+
+.notification-card.critical-stock .alert {
+  color: #e74c3c;
+}
+
+.site-footer {
+  margin-top: auto; /* siempre abajo */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 0px;
+  color: #985008;
+  font-size: 0.9rem;
+  background-color: transparent;
+}
+
+.site-footer p {
+  margin: 0;          /* quitar márgenes por defecto */
+  padding-top: 25px;   /* empuja el texto hacia abajo */
+  line-height: 0.8;   /* aumenta la altura de la línea */
+}
+
+/* 🔹 Responsive - Vista tipo aplicación móvil */
+@media screen and (max-width: 1000px) {
+  .dashboard-container {
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 0;
+    overflow-x: auto;
+    border-bottom: 3px solid rgba(0,0,0,0.1);
+    background: linear-gradient(to right, #985008, #7c420b);
+  }
+
+  .logo {
+    display: none; /* Oculta el logo para dejar más espacio */
+  }
+
+  .menu {
+    flex-direction: row;
+    justify-content: space-evenly;
+    width: 100%;
+  }
+
+  .menu-item {
+    flex-direction: column;
+    align-items: center;
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  .menu-item img.icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .main-content {
+    padding: 15px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .topbar h2 {
+    font-size: 20px;
+  }
+
+  .user-profile .avatar {
+    width: 35px;
+    height: 35px;
+  }
+
+  .notification-card {
+    font-size: 14px;
+    padding: 15px;
+  }
+
+  .notification-card h3 {
+    font-size: 15px;
+  }
+
+  .notification-card p {
+    font-size: 13px;
+  }
+}
+
+/* 🔹 Vista tipo app en celulares pequeños */
+@media screen and (max-width: 600px) {
+  .menu-item span {
+    display: none; /* Solo íconos en móvil */
+  }
+
+  .menu-item img.icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .topbar {
+    border-bottom: none;
+    padding: 10px 0;
+  }
+
+  .topbar h2 {
+    font-size: 18px;
+  }
+
+  .main-content {
+    padding: 10px;
+  }
+
+  .notification-card {
+    padding: 12px;
+    border-radius: 10px;
+  }
+}

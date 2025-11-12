@@ -1,0 +1,371 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  display: flex;
+  flex-direction: column;  /* columna para que el footer quede abajo */
+  min-height: 100vh;       /* que ocupe toda la pantalla */
+  background: #ffffea;
+  margin: 0;
+  padding: 90px;
+}
+
+.container {
+  background: #fff;
+  width: 900px;
+  display: flex;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  overflow: hidden;
+  margin: 0 auto;          /* centrado horizontal */
+  flex: 1;                 /* ocupa todo el espacio disponible para empujar el footer */
+  max-height: calc(100vh - 200px); /* opcional: que no se desborde la pantalla */
+}
+
+/* Lado izquierdo */
+.signin {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* Empezar desde arriba */
+  align-items: center;
+  padding: 20px;
+  max-height: 100%;
+  overflow-y: auto; /* Habilita scroll vertical */
+  gap: 15px; /* Espacio entre campos */
+}
+
+/* Scroll estilizado */
+.signin::-webkit-scrollbar {
+  width: 8px;
+}
+.signin::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+.signin::-webkit-scrollbar-thumb {
+  background: #985008;
+  border-radius: 10px;
+}
+.signin::-webkit-scrollbar-thumb:hover {
+  background: #7c420b;
+}
+
+.signin h2 {
+  font-size: 32px;
+  margin-bottom: 20px;
+  font-weight: bold;
+  color: #985008;
+}
+
+.social-container {
+  margin: 20px 0;
+}
+
+.social-container a {
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 5px;
+  height: 40px;
+  width: 40px;
+  font-size: 18px;
+  color: #333;
+  text-decoration: none;
+}
+
+/* Campos de entrada */
+.input-group {
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.input-group input,
+.input-group select {
+    width: 100%;
+    padding: 14px 45px 14px 20px; /* espacio para ícono de ojo */
+    border-radius: 25px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    outline: none;
+    background-color: #f7f7f7;
+    transition: all 0.3s ease;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+    border-color: #985008;
+    background-color: #fff;
+    box-shadow: 0 0 5px rgba(152, 80, 8, 0.5);
+}
+
+.input-group label {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: gray;
+    font-size: 16px;
+    pointer-events: none;
+    transition: 0.2s ease all;
+    background-color: transparent;
+    padding: 0 5px;
+}
+
+.input-group input:focus + label,
+.input-group input:not(:placeholder-shown) + label,
+.input-group select:focus + label,
+.input-group select:not([value=""]) + label {
+    top: -10px;
+    left: 15px;
+    font-size: 12px;
+    color: #985008;
+    background-color: #fff;
+}
+
+/* Ícono de mostrar/ocultar */
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+/* Enlace y botón */
+.signin a {
+  font-size: 12px;
+  color: #333;
+  margin: 5px 0 15px 0;
+  text-decoration: none;
+}
+
+.signin button {
+  display: block;              /* Centrar el botón */
+  margin: 20px auto 0 auto;    /* Centrado horizontal */
+  padding: 12px 40px;
+  border: none;
+  border-radius: 25px;
+  background: linear-gradient(to right, #985008, #7c420b);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.signin button:hover {
+  transform: scale(1.05);
+}
+
+/* Lado derecho */
+.signup-side {
+  flex: 1;
+  background: linear-gradient(to right, #985008, #7c420b);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.signup-side img {
+  width: 200px;
+  margin-bottom: 30px;
+}
+
+.signup-side h2 {
+  font-size: 28px;
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.signup-side p {
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.signup-side button {
+  padding: 12px 40px;
+  border: 1px solid #fff;
+  border-radius: 25px;
+  background: transparent;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.signup-side button:hover {
+  background: #fff;
+  color: #985008;
+}
+
+.text-muted {
+  font-size: 12px;
+  color: #666;
+}
+
+.site-footer {
+  margin-top: auto;       /* siempre abajo */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 0px;
+  color: #985008;
+  font-size: 0.9rem;
+  background-color: transparent;
+  padding: 5px 0;       /* separación del contenido */
+}
+
+.site-footer p {
+  margin: 0;
+  padding-top: 25px;       /* separa solo las letras del footer */
+  line-height: 0.1;       /* altura de línea normal */
+}
+
+/* ===== Responsive ===== */
+
+/* Tablets <=1024px */
+@media screen and (max-width: 1024px) {
+  .container {
+    width: 90%;
+    height: auto;
+    flex-direction: column;
+  }
+
+  .signin, .signup-side {
+    width: 100%;
+    padding: 25px;
+  }
+
+  .signup-side img {
+    width: 150px;
+    margin-bottom: 20px;
+  }
+
+  .signup-side h2 {
+    font-size: 24px;
+  }
+
+  .signup-side p {
+    font-size: 13px;
+  }
+
+  .signup-side button {
+    padding: 10px 35px;
+    font-size: 13px;
+  }
+}
+
+/* Móviles <=768px */
+@media screen and (max-width: 768px) {
+  body {
+    height: auto;
+    padding: 20px 0;
+  }
+
+  .container {
+    flex-direction: column;
+    width: 95%;
+    height: auto;
+  }
+
+  .signin, .signup-side {
+    width: 100%;
+    padding: 20px;
+  }
+
+  .signin h2 {
+    font-size: 28px;
+  }
+
+  .input-group input,
+  .input-group select {
+    font-size: 14px;
+    padding: 12px 40px 12px 15px;
+  }
+
+  .input-group label {
+    font-size: 14px;
+  }
+
+  .signin button {
+    padding: 10px 35px;
+    font-size: 13px;
+  }
+
+  .signup-side img {
+    width: 120px;
+    margin-bottom: 15px;
+  }
+
+  .signup-side h2 {
+    font-size: 22px;
+  }
+
+  .signup-side p {
+    font-size: 12px;
+  }
+
+  .signup-side button {
+    padding: 10px 30px;
+    font-size: 12px;
+  }
+}
+
+/* Extra pequeños <=480px */
+@media screen and (max-width: 480px) {
+  .container {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .signin h2 {
+    font-size: 24px;
+  }
+
+  .input-group input,
+  .input-group select {
+    font-size: 13px;
+    padding: 10px 35px 10px 12px;
+  }
+
+  .input-group label {
+    font-size: 12px;
+  }
+
+  .signin button {
+    padding: 8px 30px;
+    font-size: 12px;
+  }
+
+  .signup-side img {
+    width: 100px;
+  }
+
+  .signup-side h2 {
+    font-size: 20px;
+  }
+
+  .signup-side p {
+    font-size: 11px;
+  }
+
+  .signup-side button {
+    padding: 8px 25px;
+    font-size: 11px;
+  }
+}

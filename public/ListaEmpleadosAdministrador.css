@@ -1,0 +1,433 @@
+/* Reset y tipografía */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #ffffea;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Contenedor principal ocupa toda la pantalla con borde sutil */
+.dashboard-container {
+  display: flex;
+  width: 100vw;        /* ancho completo */
+  height: 100vh;       /* alto completo */
+  background: #fff8f0;
+  border: 6px solid rgba(0,0,0,0.1); /* borde muy suave */
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background: linear-gradient(to bottom, #985008, #7c420b);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 25px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.logo img.icon {
+  width: 28px;
+  margin-right: 10px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  padding-top: 10px;
+}
+
+.menu-item {
+  padding: 15px 20px;
+  color: #fff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 0;
+  transition: all 0.2s;
+}
+
+.menu-item img.icon {
+  width: 18px;
+  height: 18px;
+}
+
+.menu-item:hover,
+.menu-item.active {
+  background-color: rgba(255,255,255,0.1);
+}
+
+.menu-separator {
+  border-top: 1px solid rgba(255,255,255,0.3);
+  margin: 15px 0;
+}
+
+/* Main content ocupa todo el espacio restante */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
+  padding: 25px;
+  background: #fff8f0;
+}
+
+/* Topbar */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.search-box {
+  position: relative;
+  width: 250px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 40px 10px 15px;
+  border-radius: 25px;
+  border: 1px solid #ccc;
+  outline: none;
+  background-color: #fff7f0;
+  transition: all 0.3s ease;
+}
+
+.search-box input:focus {
+  border-color: #985008;
+  box-shadow: 0 0 5px rgba(152,80,8,0.5);
+}
+
+.search-box img.search-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-profile .notification {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+}
+
+.user-profile .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #985008;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+/* Nombre y rol del usuario en topbar */
+.user-name {
+    font-weight: bold;   /* Negritas para el nombre */
+    font-size: 14px;     /* Tamaño de fuente (puedes ajustar) */
+}
+
+.user-role {
+    color: gray;         /* Color gris para el rol */
+    font-size: 12px;     /* Tamaño de fuente (opcional) */
+}
+
+/* Tabla de usuarios */
+.user-table-section {
+  overflow-x: auto;
+  flex: 1; /* ocupa todo el alto disponible */
+}
+
+.table-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.user-table td:last-child {
+    text-align: center; /* Centra horizontalmente */
+    vertical-align: middle; /* Centra verticalmente */
+}
+
+.action-icon {
+    margin: 0; /* Elimina el margin-right que empuja el icono */
+}
+
+.btn-primary {
+  background: linear-gradient(to right, #985008, #7c420b);
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+}
+
+.btn-secondary {
+  background-color: #fff7f0;
+  color: #985008;
+  padding: 10px 20px;
+  border: 1px solid #985008;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #985008;
+  color: #fff;
+}
+
+.table-meta {
+  display: flex;
+  justify-content: flex-end;
+  gap: 20px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #666;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-table th,
+.user-table td {
+  text-align: left;
+  padding: 12px 10px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.table-avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  border: 1px solid #985008;
+}
+
+.status {
+  padding: 4px 10px;
+  border-radius: 25px;
+  font-size: 12px;
+  color: #fff;
+}
+
+.status.active {
+  background-color: #2ecc71;
+}
+
+.status.inactive {
+  background-color: #e74c3c;
+}
+
+.action-icon {
+  margin-right: 8px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.btn-login {
+  background: linear-gradient(to right, #985008, #7c420b);
+  color: #fff;
+  padding: 6px 15px;
+  border: none;
+  border-radius: 25px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.btn-login:hover {
+  transform: scale(1.05);
+}
+
+.menu-item.logout {
+  color: #e74c3c;
+}
+
+.menu-item.logout:hover {
+  background-color: rgba(231, 76, 60, 0.2);
+}
+
+.site-footer {
+  margin-top: auto; /* siempre abajo */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 0px;
+  color: #985008;
+  font-size: 0.9rem;
+  background-color: transparent;
+}
+
+.site-footer p {
+  margin: 0;          /* quitar márgenes por defecto */
+  padding-top: 25px;   /* empuja el texto hacia abajo */
+  line-height: 0.8;   /* aumenta la altura de la línea */
+}
+
+/* ===== Responsive para tablets y móviles ===== */
+
+/* Tablets: pantallas medianas (<=1024px) */
+@media screen and (max-width: 1024px) {
+  .dashboard-container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .menu {
+    flex-direction: row;
+    padding-top: 0;
+  }
+
+  .menu-item {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+    padding: 12px;
+  }
+
+  .main-content {
+    padding: 20px;
+  }
+
+  .table-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .user-table-section {
+    overflow-x: auto;
+  }
+}
+
+/* Móviles: pantallas pequeñas (<=768px) */
+@media screen and (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .menu {
+    flex-direction: row;
+    padding-top: 0;
+  }
+
+  .menu-item {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .user-profile {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .table-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .user-table th,
+  .user-table td {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-login {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .search-box input {
+    font-size: 12px;
+    padding: 8px 35px 8px 12px;
+  }
+
+  .search-box img.search-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .table-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

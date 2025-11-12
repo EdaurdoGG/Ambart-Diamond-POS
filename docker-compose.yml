@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  www:
+    container_name: php-apache
+    build:
+      context: ./      # Carpeta donde está tu Dockerfile
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    volumes:
+      - ./:/var/www/html/  # Código fuente
+    ports:
+      - 90:80
+    restart: always   # Reinicia automáticamente si se cae
+
+  db:
+    container_name: db
+    image: mysql:9.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: clave
+      MYSQL_DATABASE: prueba
+      MYSQL_USER: user
+      MYSQL_PASSWORD: test
+    ports:
+      - "3309:3306"
+    volumes:
+      - ./db:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin
+    ports:
+      - '91:80'
+    restart: always
+    environment:
+      PMA_HOST: db
+    depends_on:
+      - db

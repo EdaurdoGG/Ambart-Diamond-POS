@@ -1,0 +1,300 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  display: flex;
+  flex-direction: column;  /* columna para que el footer quede abajo */
+  min-height: 100vh;       /* que ocupe toda la pantalla */
+  background: #ffffea;
+  margin: 0;
+  padding: 90px;
+}
+
+.container {
+  background: #fff;
+  width: 900px;
+  display: flex;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  overflow: hidden;
+  margin: 0 auto;          /* centrado horizontal */
+  flex: 1;                 /* ocupa todo el espacio disponible para empujar el footer */
+  max-height: calc(100vh - 200px); /* opcional: que no se desborde la pantalla */
+}
+
+/* Lado izquierdo - formulario */
+.signin {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* inicia desde arriba */
+  align-items: center;
+  padding: 40px;
+  max-height: 100%;     /* para que no sobresalga del contenedor */
+  overflow-y: auto;     /* activa la barra de scroll vertical */
+  gap: 20px;            /* espacio entre elementos */
+}
+
+.signin button {
+    display: block;          /* convierte el botón en bloque */
+    margin: 20px auto 0 auto; /* 20px arriba, centrado horizontalmente */
+    padding: 12px 40px;
+    border: none;
+    border-radius: 25px;
+    background: linear-gradient(to right, #985008, #7c420b);
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.3s;
+}
+
+/* Ícono de mostrar/ocultar */
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+.signin h2 {
+  font-size: 32px;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #985008;
+}
+
+.signin p.text-muted {
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.input-group {
+  position: relative;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 25px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  outline: none;
+  background-color: #f7f7f7;
+  transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+  border-color: #985008;
+  background-color: #fff;
+  box-shadow: 0 0 5px rgba(152, 80, 8, 0.5);
+}
+
+.input-group label {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: gray;
+  font-size: 16px;
+  pointer-events: none;
+  transition: 0.2s ease all;
+  background-color: transparent;
+  padding: 0 5px;
+}
+
+.input-group input:focus + label,
+.input-group input:not(:placeholder-shown) + label {
+  top: -10px;
+  left: 15px;
+  font-size: 12px;
+  color: #985008;
+  background-color: #fff;
+}
+
+.signin button:hover {
+  transform: scale(1.05);
+  background: linear-gradient(to right, #7c420b, #985008);
+}
+
+.signin a {
+  font-size: 12px;
+  color: #333;
+  margin-top: 10px;
+  text-decoration: none;
+}
+
+.signin a:hover {
+  text-decoration: underline;
+  color: #985008;
+}
+
+/* Lado derecho decorativo */
+.signup-side {
+  flex: 1;
+  background: linear-gradient(to right, #985008, #7c420b);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.signup-side img {
+  width: 200px;
+  margin-bottom: 30px;
+}
+
+.signup-side h2 {
+  font-size: 28px;
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.signup-side p {
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.site-footer {
+  margin-top: auto;       /* siempre abajo */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 0px;
+  color: #985008;
+  font-size: 0.9rem;
+  background-color: transparent;
+  padding: 5px 0;       /* separación del contenido */
+}
+
+.site-footer p {
+  margin: 0;
+  padding-top: 25px;       /* separa solo las letras del footer */
+  line-height: 0.1;       /* altura de línea normal */
+}
+
+/* ===== Responsive ===== */
+
+/* Tablets <=1024px */
+@media screen and (max-width: 1024px) {
+  .container {
+    width: 90%;
+    height: auto;
+    flex-direction: column;
+  }
+
+  .signin,
+  .signup-side {
+    width: 100%;
+    padding: 30px 20px;
+    max-height: none;
+  }
+
+  .signup-side img {
+    width: 150px;
+    margin-bottom: 20px;
+  }
+
+  .signin h2 {
+    font-size: 28px;
+  }
+
+  .signup-side h2 {
+    font-size: 24px;
+  }
+}
+
+/* Móviles <=768px */
+@media screen and (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .signin,
+  .signup-side {
+    width: 100%;
+    padding: 20px 15px;
+  }
+
+  .signin h2 {
+    font-size: 24px;
+  }
+
+  .signup-side h2 {
+    font-size: 20px;
+  }
+
+  .signin p.text-muted,
+  .signup-side p {
+    font-size: 12px;
+  }
+
+  .input-group input {
+    padding: 12px 15px;
+    font-size: 14px;
+  }
+
+  .input-group label {
+    font-size: 14px;
+  }
+
+  .signin button {
+    padding: 10px 30px;
+    font-size: 12px;
+  }
+
+  .signup-side img {
+    width: 120px;
+    margin-bottom: 15px;
+  }
+}
+
+/* Extra pequeños <=480px */
+@media screen and (max-width: 480px) {
+  .signin h2 {
+    font-size: 20px;
+  }
+
+  .signup-side h2 {
+    font-size: 18px;
+  }
+
+  .signin p.text-muted,
+  .signup-side p {
+    font-size: 11px;
+  }
+
+  .input-group input {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .input-group label {
+    font-size: 12px;
+  }
+
+  .signin button {
+    padding: 8px 25px;
+    font-size: 11px;
+  }
+
+  .signup-side img {
+    width: 100px;
+    margin-bottom: 10px;
+  }
+}

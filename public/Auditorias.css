@@ -1,0 +1,382 @@
+/* ===== Reset Básico y tipografía ===== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #ffffea;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ===== Contenedor principal ===== */
+.dashboard-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  background: #fff8f0;
+  border: 6px solid rgba(0,0,0,0.1);
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+  width: 250px;
+  background: linear-gradient(to bottom, #985008, #7c420b);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 25px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.logo img.icon {
+  width: 28px;
+  margin-right: 10px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  padding-top: 10px;
+}
+
+.menu-item {
+  padding: 15px 20px;
+  color: #fff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s;
+}
+
+.menu-item img.icon {
+  width: 18px;
+  height: 18px;
+}
+
+.menu-item:hover,
+.menu-item.active {
+  background-color: rgba(255,255,255,0.1);
+}
+
+.menu-separator {
+  border-top: 1px solid rgba(255,255,255,0.3);
+  margin: 15px 0;
+}
+
+.menu-item.logout {
+  color: #e74c3c;
+}
+
+.menu-item.logout:hover {
+  background-color: rgba(231, 76, 60, 0.2);
+}
+
+/* ===== Main Content ===== */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
+  padding: 25px;
+  background: #fff8f0;
+}
+
+/* ===== Topbar ===== */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.topbar h2 {
+  color: #985008;
+  font-size: 24px;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-profile .notification {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #985008;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.user-name {
+  font-weight: bold;
+}
+
+.user-role {
+  color: gray;
+}
+
+/* ===== Secciones de Auditoría ===== */
+.auditoria-section {
+  margin-bottom: 25px;
+}
+
+.auditoria-section h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+/* Contenedor con scroll */
+.table-container {
+  max-height: 250px;   /* altura fija para ver scroll */
+  overflow-y: auto;    /* scroll vertical */
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+}
+
+/* Tablas de auditoría */
+.auditoria-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.auditoria-table th,
+.auditoria-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.auditoria-table th {
+  background: #bb6802;
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* ===== Estado y acciones ===== */
+.status {
+  padding: 4px 10px;
+  border-radius: 25px;
+  font-size: 12px;
+  color: #fff;
+}
+
+.status.active {
+  background-color: #2ecc71;
+}
+
+.status.inactive {
+  background-color: #e74c3c;
+}
+
+.action-icon {
+  margin-right: 8px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+/* ===== Botones ===== */
+.btn-primary {
+  background: linear-gradient(to right, #985008, #7c420b);
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+}
+
+.btn-secondary {
+  background-color: #fff7f0;
+  color: #985008;
+  padding: 10px 20px;
+  border: 1px solid #985008;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #985008;
+  color: #fff;
+}
+
+.site-footer {
+  margin-top: auto; /* siempre abajo */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 0px;
+  color: #985008;
+  font-size: 0.9rem;
+  background-color: transparent;
+}
+
+.site-footer p {
+  margin: 0;          /* quitar márgenes por defecto */
+  padding-top: 25px;   /* empuja el texto hacia abajo */
+  line-height: 0.8;   /* aumenta la altura de la línea */
+}
+
+/* Responsive - Vista tipo aplicación móvil */
+@media screen and (max-width: 1000px) {
+  .dashboard-container {
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+
+  /* 🔸 Sidebar como barra inferior */
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    height: 65px;
+    background: linear-gradient(to right, #985008, #7c420b);
+    border-top: 3px solid rgba(0,0,0,0.1);
+    z-index: 999;
+  }
+
+  .logo {
+    display: none; /* Oculta el logo en vista móvil */
+  }
+
+  .menu {
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    padding-top: 0;
+  }
+
+  .menu-item {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 12px;
+    padding: 5px;
+  }
+
+  .menu-item img.icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* 🔸 Contenido principal */
+  .main-content {
+    padding: 15px;
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 70px; /* espacio para la barra inferior */
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+  }
+
+  .topbar h2 {
+    font-size: 20px;
+  }
+
+  .user-profile .avatar {
+    width: 35px;
+    height: 35px;
+  }
+
+  .auditoria-section h2 {
+    font-size: 16px;
+  }
+
+  .table-container {
+    max-height: 180px;
+    font-size: 13px;
+  }
+}
+
+/* 🔹 Responsive para celulares pequeños */
+@media screen and (max-width: 600px) {
+  .menu-item span {
+    display: none; /* Muestra solo íconos para estilo tipo app */
+  }
+
+  .menu-item img.icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .topbar h2 {
+    font-size: 18px;
+  }
+
+  .main-content {
+    padding: 10px;
+  }
+
+  .auditoria-table th,
+  .auditoria-table td {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    font-size: 13px;
+    padding: 8px 15px;
+  }
+}

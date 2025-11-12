@@ -1,0 +1,26 @@
+# === PHP & Composer ===
+/vendor/
+composer.lock
+
+# === Archivos de entorno y configuración ===
+.env
+
+# === Logs y temporales ===
+*.log
+*.tmp
+*.bak
+*.swp
+
+# === Configuración de editores ===
+.vscode/
+.idea/
+
+# === Archivos del sistema ===
+.DS_Store
+Thumbs.db
+
+# === Archivos de Docker locales ===
+docker-compose.override.yml
+
+# === Subidas de usuario (si no quieres subir imágenes locales) ===
+/Public/uploads/

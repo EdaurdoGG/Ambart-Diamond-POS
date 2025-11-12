@@ -1,0 +1,633 @@
+/* Reset y tipografía */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background: #ffffea;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Contenedor del buscador */
+.search-box {
+  position: relative;
+  width: 250px;
+}
+
+/* Input tipo fecha dentro del buscador */
+.search-box input {
+  width: 100%;
+  padding: 10px 40px 10px 15px;
+  border-radius: 25px;
+  border: 1px solid #ccc;
+  outline: none;
+  background-color: #fff7f0;
+  transition: all 0.3s ease;
+}
+
+.search-box input:focus {
+  border-color: #985008;
+  box-shadow: 0 0 5px rgba(152,80,8,0.5);
+}
+
+/* Botón con la lupa */
+.search-box .search-button {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  padding: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+
+.search-box .search-button:hover {
+  transform: scale(1.1); /* Crece al pasar el mouse */
+}
+
+.search-box .search-button img.search-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+/* Contenedor principal */
+.dashboard-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  background: #fff8f0;
+  border: 6px solid rgba(0,0,0,0.1);
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background: linear-gradient(to bottom, #985008, #7c420b);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 25px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.logo img.icon {
+  width: 28px;
+  margin-right: 10px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  padding-top: 10px;
+}
+
+.menu-item {
+  padding: 15px 20px;
+  color: #fff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s;
+}
+
+.menu-item img.icon {
+  width: 18px;
+  height: 18px;
+}
+
+.menu-item:hover,
+.menu-item.active {
+  background-color: rgba(255,255,255,0.1);
+}
+
+.menu-separator {
+  border-top: 1px solid rgba(255,255,255,0.3);
+  margin: 15px 0;
+}
+
+.menu-item.logout {
+  color: #e74c3c;
+}
+
+.menu-item.logout:hover {
+  background-color: rgba(231, 76, 60, 0.2);
+}
+
+/* Main content */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 25px;
+  background: #fff8f0;
+}
+
+/* Topbar */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.topbar h2 {
+  color: #985008;
+  font-size: 24px;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-profile .notification {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #985008;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.user-name {
+  font-weight: bold;
+}
+
+.user-role {
+  color: gray;
+}
+
+
+.btn-primary {
+  background: linear-gradient(to right, #985008, #7c420b);
+  color: #fff;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+}
+
+/* Tarjetas resumen */
+.cards-overview {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.finance-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  transition: transform 0.2s;
+}
+
+.finance-card:hover {
+  transform: translateY(-5px);
+}
+
+.finance-card h3 {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.finance-card p {
+  font-size: 20px;
+  font-weight: bold;
+  color: #985008;
+}
+
+.finance-card.highlight {
+  background: linear-gradient(to right, #985008, #7c420b);
+  color: #fff;
+}
+
+.finance-card.highlight p {
+  color: #fff;
+}
+
+/* Ventas por empleado */
+.employee-sales {
+  margin-bottom: 30px;
+}
+
+.employee-sales h3 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.employee-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.employee-card {
+  background: #fff;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.employee-card h4 {
+  margin-bottom: 10px;
+  color: #985008;
+}
+
+.employee-card span {
+  font-weight: bold;
+  color: #333;
+}
+
+/* Tabla */
+.finance-table {
+  background: #fff;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.finance-table h3 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.finance-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.finance-table th,
+.finance-table td {
+  padding: 12px 10px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.finance-table th {
+  background-color: #f7f7f7;
+  font-weight: bold;
+}
+
+.finance-table tr:hover {
+  background-color: #fafafa;
+}
+
+/* ===== Responsive ===== */
+@media screen and (max-width: 1024px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .main-content {
+    padding: 15px;
+  }
+  .cards-overview {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .topbar h2 {
+    font-size: 20px;
+  }
+  .user-info {
+    font-size: 12px;
+  }
+  .btn-primary {
+    padding: 6px 15px;
+    font-size: 13px;
+  }
+  .cards-overview {
+    grid-template-columns: 1fr;
+  }
+  .finance-card h3 {
+    font-size: 15px;
+  }
+  .finance-card p {
+    font-size: 18px;
+  }
+  .employee-card h4 {
+    font-size: 14px;
+  }
+  .employee-card span {
+    font-size: 14px;
+  }
+  .finance-table th,
+  .finance-table td {
+    font-size: 13px;
+    padding: 10px 8px;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .avatar {
+    width: 35px;
+    height: 35px;
+  }
+  .btn-primary {
+    width: 100%;
+    padding: 8px 0;
+    font-size: 12px;
+  }
+  .employee-grid {
+    grid-template-columns: 1fr;
+  }
+  .finance-table table {
+    font-size: 12px;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .topbar h2 {
+    font-size: 18px;
+  }
+  .finance-card p {
+    font-size: 16px;
+  }
+  .finance-card h3 {
+    font-size: 14px;
+  }
+  .employee-card h4 {
+    font-size: 13px;
+  }
+  .employee-card span {
+    font-size: 12px;
+  }
+  .finance-table th,
+  .finance-table td {
+    font-size: 11px;
+    padding: 8px 5px;
+  }
+}
+
+/* ===== Modal Detalle de Venta ===== */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 0; top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.4);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  position: relative;
+  background-color: #fff8f0;
+  padding: 25px 35px;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+  width: 90%;
+  max-width: 420px;
+  animation: modalFade 0.3s ease;
+}
+
+.modal-content h3 {
+  margin-bottom: 15px;
+  color: #985008;
+  text-align: center;
+}
+
+.modal-content p {
+  margin: 10px 0;
+  color: #333;
+  font-size: 15px;
+}
+
+.modal-content strong {
+  color: #7c420b;
+}
+
+/* ===== Centrar columna de cantidad en el modal ===== */
+#detalle-contenido td.cantidad,
+#detalle-contenido th.cantidad {
+  text-align: center;
+}
+
+.close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  color: #985008;
+  font-size: 24px;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.close:hover {
+  color: #7c420b;
+}
+
+.site-footer {
+  margin-top: auto; /* siempre abajo */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 0px;
+  color: #985008;
+  font-size: 0.9rem;
+  background-color: transparent;
+}
+
+.site-footer p {
+  margin: 0;          /* quitar márgenes por defecto */
+  padding-top: 25px;   /* empuja el texto hacia abajo */
+  line-height: 0.8;   /* aumenta la altura de la línea */
+}
+
+@keyframes modalFade {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ===== Responsive ===== */
+
+/* Tablets <=1024px */
+@media screen and (max-width: 1024px) {
+  .dashboard-container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .menu {
+    flex-direction: row;
+    padding-top: 0;
+  }
+
+  .menu-item {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+    padding: 12px;
+  }
+
+  .main-content {
+    padding: 20px;
+  }
+
+  .cards-overview {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+  }
+
+  .employee-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+  }
+
+  .finance-table table {
+    font-size: 13px;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+}
+
+/* Móviles <=768px */
+@media screen and (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .menu {
+    flex-direction: row;
+    padding-top: 0;
+  }
+
+  .menu-item {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .user-profile {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .table-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .cards-overview {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .employee-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .finance-table table,
+  .finance-table th,
+  .finance-table td {
+    font-size: 12px;
+  }
+
+  .finance-card h3,
+  .employee-card h4 {
+    font-size: 14px;
+  }
+
+  .finance-card p,
+  .employee-card span {
+    font-size: 16px;
+  }
+
+  .btn-primary {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+
+  .search-box input {
+    padding: 8px 35px 8px 12px;
+    font-size: 12px;
+  }
+}

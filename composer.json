@@ -1,0 +1,17 @@
+{
+    "name": "luis/ambar-diamonds",
+    "description": "Sistema de gestión de pedidos AmbarDiamonds",
+    "type": "project",
+    "require": {
+        "dompdf/dompdf": "^3.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "Includes/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}
