@@ -132,31 +132,38 @@ BEGIN
     DECLARE v_usuario INT DEFAULT @id_usuario_actual;
 
     IF NOT (NEW.Nombre <=> OLD.Nombre) THEN
-        INSERT INTO AuditoriaProducto VALUES (CONCAT('Modificacion por Usuario ', v_usuario), 'Nombre', OLD.Nombre, NEW.Nombre, v_usuario);
+        INSERT INTO AuditoriaProducto (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES (CONCAT('Modificacion por Usuario ', v_usuario), 'Nombre', OLD.Nombre, NEW.Nombre, v_usuario);
     END IF;
 
     IF NOT (NEW.CodigoBarra <=> OLD.CodigoBarra) THEN
-        INSERT INTO AuditoriaProducto VALUES (CONCAT('Modificacion por Usuario ', v_usuario), 'CodigoBarra', OLD.CodigoBarra, NEW.CodigoBarra, v_usuario);
+        INSERT INTO AuditoriaProducto (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES (CONCAT('Modificacion por Usuario ', v_usuario), 'CodigoBarra', OLD.CodigoBarra, NEW.CodigoBarra, v_usuario);
     END IF;
 
     IF NOT (NEW.Existencia <=> OLD.Existencia) THEN
-        INSERT INTO AuditoriaProducto VALUES (CONCAT('Cambio por Venta/Devolucion/Usuario ', v_usuario), 'Existencia', OLD.Existencia, NEW.Existencia, v_usuario);
+        INSERT INTO AuditoriaProducto (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES (CONCAT('Cambio por Venta/Devolucion/Usuario ', v_usuario), 'Existencia', OLD.Existencia, NEW.Existencia, v_usuario);
 
         IF NEW.Existencia < 10 AND OLD.Existencia >= 10 THEN
-            INSERT INTO AuditoriaProducto VALUES ('Alerta Baja Existencia', 'Existencia', OLD.Existencia, NEW.Existencia, v_usuario);
+            INSERT INTO AuditoriaProducto (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+            VALUES ('Alerta Baja Existencia', 'Existencia', OLD.Existencia, NEW.Existencia, v_usuario);
         END IF;
     END IF;
 
     IF NOT (NEW.PrecioCompra <=> OLD.PrecioCompra) THEN
-        INSERT INTO AuditoriaProducto VALUES (CONCAT('Modificacion por Usuario ', v_usuario), 'PrecioCompra', OLD.PrecioCompra, NEW.PrecioCompra, v_usuario);
+        INSERT INTO AuditoriaProducto (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES (CONCAT('Modificacion por Usuario ', v_usuario), 'PrecioCompra', OLD.PrecioCompra, NEW.PrecioCompra, v_usuario);
     END IF;
 
     IF NOT (NEW.PrecioVenta <=> OLD.PrecioVenta) THEN
-        INSERT INTO AuditoriaProducto VALUES (CONCAT('Modificacion por Usuario ', v_usuario), 'PrecioVenta', OLD.PrecioVenta, NEW.PrecioVenta, v_usuario);
+        INSERT INTO AuditoriaProducto (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES (CONCAT('Modificacion por Usuario ', v_usuario), 'PrecioVenta', OLD.PrecioVenta, NEW.PrecioVenta, v_usuario);
     END IF;
 
     IF NOT (NEW.idCategoria <=> OLD.idCategoria) THEN
-        INSERT INTO AuditoriaProducto VALUES (CONCAT('Modificacion por Usuario ', v_usuario), 'Categoria', OLD.idCategoria, NEW.idCategoria, v_usuario);
+        INSERT INTO AuditoriaProducto (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES (CONCAT('Modificacion por Usuario ', v_usuario), 'Categoria', OLD.idCategoria, NEW.idCategoria, v_usuario);
     END IF;
 END$$
 
