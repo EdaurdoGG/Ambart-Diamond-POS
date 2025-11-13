@@ -1,4 +1,3 @@
--- Creación de la base de datos
 CREATE DATABASE AmbarDiamond;
 USE AmbarDiamond;
 
@@ -106,7 +105,7 @@ CREATE TABLE DetalleCarrito (
     idCarrito INT NOT NULL,
     idProducto INT NOT NULL,
     NombreProducto VARCHAR(150) NOT NULL,
-    ImagenProducto VARCHAR(255), -- ruta o URL de la imagen del producto
+    ImagenProducto VARCHAR(255),
     Cantidad INT NOT NULL CHECK (Cantidad > 0),
     PrecioUnitario DECIMAL(10,2) NOT NULL,
     Total DECIMAL(10,2) GENERATED ALWAYS AS (Cantidad * PrecioUnitario) STORED,

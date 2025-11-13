@@ -1,7 +1,5 @@
 DELIMITER $$
 
--- TRIGGER: DetalleVentaBeforeInsert
--- Evita vender más de lo que hay en stock
 CREATE TRIGGER DetalleVentaBeforeInsert
 BEFORE INSERT ON DetalleVenta
 FOR EACH ROW
@@ -17,8 +15,6 @@ BEGIN
     END IF;
 END$$
 
--- TRIGGER: DetalleVentaAfterInsert
--- Auditoría al registrar una venta
 CREATE TRIGGER DetalleVentaAfterInsert
 AFTER INSERT ON DetalleVenta
 FOR EACH ROW
@@ -33,8 +29,6 @@ BEGIN
     );
 END$$
 
--- TRIGGER: DevolucionAfterInsert
--- Auditoría al registrar una devolución
 CREATE TRIGGER DevolucionAfterInsert
 AFTER INSERT ON Devolucion
 FOR EACH ROW
@@ -49,8 +43,6 @@ BEGIN
     );
 END$$
 
--- TRIGGER: PersonaAfterInsert
--- Auditoría al crear una persona
 CREATE TRIGGER PersonaAfterInsert
 AFTER INSERT ON Persona
 FOR EACH ROW
@@ -65,8 +57,6 @@ BEGIN
     );
 END$$
 
--- TRIGGER: PersonaAfterUpdate
--- Auditoría de cambios en Persona
 CREATE TRIGGER PersonaAfterUpdate
 AFTER UPDATE ON Persona
 FOR EACH ROW
@@ -107,8 +97,6 @@ BEGIN
     END IF;
 END$$
 
--- TRIGGER: ProductoAfterInsert
--- Auditoría al crear un producto
 CREATE TRIGGER ProductoAfterInsert
 AFTER INSERT ON Producto
 FOR EACH ROW
@@ -123,8 +111,6 @@ BEGIN
     );
 END$$
 
--- TRIGGER: ProductoAfterUpdate
--- Auditoría de cambios en Producto + alerta baja existencia
 CREATE TRIGGER ProductoAfterUpdate
 AFTER UPDATE ON Producto
 FOR EACH ROW
