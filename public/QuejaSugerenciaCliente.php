@@ -1,9 +1,8 @@
 <?php
 session_start();
 
-// Verificar que el cliente esté logueado
-$idCliente = $_SESSION['idPersona'] ?? null;
-if (!$idCliente) {
+// Verificar sesión activa y rol de cliente (rol = 2)
+if (!isset($_SESSION['idPersona']) || ($_SESSION['rol'] ?? 0) != 3) {
     header("Location: Login.php");
     exit();
 }
@@ -11,8 +10,10 @@ if (!$idCliente) {
 // Conexión
 require_once "../includes/conexion.php";
 
+$idCliente = $_SESSION['idPersona'];
+
 // Asignar el id del usuario logueado a la variable @id_usuario_actual
-$conn->query("SET @id_usuario_actual = " . intval($_SESSION['idPersona']));
+$conn->query("SET @id_usuario_actual = " . intval($idCliente));
 
 // Obtener datos del cliente desde la vista ClientesRegistrados
 $stmt = $conn->prepare("SELECT Nombre, ApellidoPaterno, ApellidoMaterno, Imagen, Rol FROM ClientesRegistrados WHERE idCliente = ?");
@@ -40,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensaje = "Por favor completa todos los campos.";
         $tipoMensaje = 'error';
     } else {
-        // Llamar al procedimiento almacenado
+        // Procedimiento almacenado
         $stmt = $conn->prepare("CALL RegistrarSugerenciaQueja(?, ?, ?)");
         if (!$stmt) {
             die("Error al preparar la consulta: " . $conn->error);
@@ -48,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param("iss", $idCliente, $tipo, $descripcion);
 
         if ($stmt->execute()) {
-            $mensaje = "Tu queja o sugerencia se registró correctamente.";
+            $mensaje = "Queja o sugerencia registrada correctamente.";
             $tipoMensaje = 'success';
         } else {
             $mensaje = "Error al registrar: " . $stmt->error;
@@ -71,8 +72,13 @@ $conn->close();
   <link rel="stylesheet" href="QuejaSugerenciaCliente.css">
   <link rel="icon" type="image/png" href="imagenes/Logo.png">
   <style>
-    .mensaje-success { color: green; margin-bottom: 15px; }
-    .mensaje-error { color: red; margin-bottom: 15px; }
+    .alert-message { 
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      padding: 16px 28px; border-radius: 12px; font-size: 16px; font-weight: 600; text-align: center; color: #fff; 
+      z-index: 9999;
+    }
+    .alert-success { background-color: #4CAF50; }
+    .alert-error { background-color: #f44336; }
   </style>
 </head>
 <body>
@@ -123,14 +129,6 @@ $conn->close();
       <!-- Formulario -->
       <section class="form-section">
         <form class="form-card" action="" method="POST">
-
-          <!-- Mensaje -->
-          <?php if (!empty($mensaje)): ?>
-            <div class="mensaje-<?php echo $tipoMensaje; ?>">
-              <?php echo htmlspecialchars($mensaje); ?>
-            </div>
-          <?php endif; ?>
-
           <!-- Tipo -->
           <div class="form-group">
             <select id="tipo" name="tipo" required>
@@ -152,10 +150,18 @@ $conn->close();
           </div>
         </form>
       </section>
+
       <footer class="site-footer">
         <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
       </footer>
     </main>
   </div>
+
+  <!-- Mensaje flotante -->
+  <?php if (!empty($mensaje)): ?>
+    <div id="mensaje-flotante" class="alert-message <?= ($tipoMensaje === 'success') ? 'alert-success' : 'alert-error' ?>">
+      <?= htmlspecialchars($mensaje) ?>
+    </div>
+  <?php endif; ?>
 </body>
 </html>

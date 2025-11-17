@@ -304,37 +304,37 @@ body {
 
 
 /* ===== MENSAJE FLOTANTE CENTRADO ===== */
-    .mensaje-flotante {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 20px 40px;
-      border-radius: 10px;
-      font-size: 18px;
-      font-weight: bold;
-      color: white;
-      text-align: center;
-      z-index: 9999;
-      opacity: 0;
-      animation: fadeInOut 5s ease forwards;
-    }
+.mensaje-flotante {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px 40px;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+  z-index: 99999;
+  opacity: 0;
+  animation: fadeInOut 3s ease forwards;
+}
 
-    .mensaje-flotante.exito {
-      background-color: #27ae60; /* verde */
-      box-shadow: 0 0 15px rgba(39,174,96,0.5);
-    }
+.mensaje-flotante.exito {
+  background-color: #27ae60;
+  box-shadow: 0 0 15px rgba(39,174,96,0.5);
+}
 
-    .mensaje-flotante.error {
-      background-color: #e74c3c; /* rojo */
-      box-shadow: 0 0 15px rgba(231,76,60,0.5);
-    }
+.mensaje-flotante.error {
+  background-color: #e74c3c;
+  box-shadow: 0 0 15px rgba(231,76,60,0.5);
+}
 
-    @keyframes fadeInOut {
-      0% { opacity: 0; transform: translate(-50%, -60%); }
-      10%, 90% { opacity: 1; transform: translate(-50%, -50%); }
-      100% { opacity: 0; transform: translate(-50%, -40%); }
-    }
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -60%); }
+  10%, 70% { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 0; transform: translate(-50%, -40%); }
+}
 
     /* 🔹 RESPONSIVE — Vista tipo aplicación móvil */
 @media screen and (max-width: 1024px) {

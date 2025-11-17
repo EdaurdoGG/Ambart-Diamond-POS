@@ -1,11 +1,13 @@
 <?php
 session_start();
 
-// Verificar que el usuario esté logueado y sea administrador
+// Verificar que el usuario esté logueado y sea administrador (rol = 1)
 if (!isset($_SESSION['idPersona']) || ($_SESSION['rol'] ?? 0) != 1) {
     header("Location: Login.php");
     exit();
 }
+
+$idPersona = $_SESSION['idPersona'];
 
 // Conexión
 require_once "../includes/conexion.php";
@@ -28,14 +30,6 @@ $stmtAdmin->close();
 // Filtro de fecha si se envió
 $fechaFiltro = $_GET['fecha'] ?? '';
 
-$whereFecha = "";
-if (!empty($fechaFiltro)) {
-    $whereFecha = "WHERE DATE(pe.Fecha) = ?";
-}
-
-// Obtener pedidos completos
-$fechaFiltro = $_GET['fecha'] ?? '';
-
 // Obtener pedidos completos según fecha
 if (!empty($fechaFiltro)) {
     $stmtPedidos = $conn->prepare("
@@ -53,8 +47,7 @@ if (!empty($fechaFiltro)) {
     ");
     $stmtPedidos->bind_param("s", $fechaFiltro);
 } else {
-    // Si no se pasa fecha, traer todos los pedidos del día actual
-    $hoy = date('Y-m-d');
+    // Si no se pasa fecha, traer todos los pedidos sin filtrar
     $stmtPedidos = $conn->prepare("
         SELECT 
             dp.idPedido,
@@ -64,18 +57,15 @@ if (!empty($fechaFiltro)) {
             GROUP_CONCAT(CONCAT(dp.Producto, ' x', dp.Cantidad) SEPARATOR ', ') AS Productos,
             SUM(dp.Total) AS Total
         FROM PedidosCompletos dp
-        WHERE DATE(dp.Fecha) = ?
         GROUP BY dp.idPedido, dp.Usuario, dp.Fecha, dp.Estatus
         ORDER BY dp.Fecha DESC
     ");
-    $stmtPedidos->bind_param("s", $hoy);
 }
 
 $stmtPedidos->execute();
 $resultPedidos = $stmtPedidos->get_result();
 
-$stmtPedidos->execute();
-$resultPedidos = $stmtPedidos->get_result();
+$conn->close();
 ?>
 
 <!DOCTYPE html>

@@ -1,20 +1,21 @@
 <?php
 session_start();
 
-// Verificar que el usuario esté logueado y sea administrador
-if (!isset($_SESSION['idPersona'])) {
+// Verificar que el usuario esté logueado y sea administrador (rol = 1)
+if (!isset($_SESSION['idPersona']) || ($_SESSION['rol'] ?? 0) != 1) {
     header("Location: Login.php");
     exit();
 }
 
 $idPersona = $_SESSION['idPersona'];
-$mensaje = "";
 
 // Conexión
 require_once "../includes/conexion.php";
 
 // Asignar el id del usuario logueado a la variable @id_usuario_actual
 $conn->query("SET @id_usuario_actual = " . intval($_SESSION['idPersona']));
+
+$mensaje = "";
 
 // Obtener datos del administrador desde la vista
 $stmt = $conn->prepare("SELECT Nombre, ApellidoPaterno, ApellidoMaterno, Email, Telefono, Imagen, Estado, Rol 

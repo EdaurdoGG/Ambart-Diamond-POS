@@ -1,11 +1,13 @@
 <?php
 session_start();
 
-// Verificar sesión de administrador
+// Verificar que el usuario esté logueado y sea administrador (rol = 1)
 if (!isset($_SESSION['idPersona']) || ($_SESSION['rol'] ?? 0) != 1) {
     header("Location: Login.php");
     exit();
 }
+
+$idPersona = $_SESSION['idPersona'];
 
 // Conexión
 require_once "../includes/conexion.php";

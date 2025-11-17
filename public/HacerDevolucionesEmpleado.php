@@ -7,18 +7,15 @@ if (!isset($_SESSION['idPersona']) || ($_SESSION['rol'] ?? 0) != 2) {
     exit();
 }
 
-// Activar reporte de errores MySQLi (para depuración segura)
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // Conexión
 require_once "../includes/conexion.php";
 
 $idEmpleado = $_SESSION['idPersona'];
+$conn->query("SET @id_usuario_actual = " . intval($idEmpleado));
 
-// Asignar el id del usuario logueado a la variable @id_usuario_actual
-$conn->query("SET @id_usuario_actual = " . intval($_SESSION['idPersona']));
-
-// Obtener datos del empleado desde la vista EmpleadosRegistrados
+// Obtener datos del empleado
 $stmt = $conn->prepare("SELECT Nombre, ApellidoPaterno, ApellidoMaterno, Imagen, Rol FROM EmpleadosRegistrados WHERE idEmpleado = ?");
 $stmt->bind_param("i", $idEmpleado);
 $stmt->execute();
@@ -26,76 +23,67 @@ $result = $stmt->get_result();
 $empleado = $result->fetch_assoc();
 $stmt->close();
 
-// Datos del usuario
 $nombreCompleto = $empleado ? $empleado['Nombre'] . ' ' . $empleado['ApellidoPaterno'] . ' ' . $empleado['ApellidoMaterno'] : 'Empleado';
 $rol = $empleado ? $empleado['Rol'] : 'Empleado';
 $imagen = $empleado && $empleado['Imagen'] ? $empleado['Imagen'] : 'imagenes/User.png';
 
-// Obtener todas las ventas del día del empleado logueado 
+// Obtener ventas de hoy
 $hoy = date("Y-m-d");
 $ventasHoy = [];
+
 $sql = "SELECT v.idVenta, dv.idDetalleVenta, p.Nombre AS Producto, dv.Cantidad
         FROM Venta v
         JOIN DetalleVenta dv ON v.idVenta = dv.idVenta
         JOIN Producto p ON dv.idProducto = p.idProducto
         WHERE v.idPersona = ? AND DATE(v.Fecha) = ?
         ORDER BY v.Fecha DESC";
-$stmt = $conn->prepare($sql);
-if ($stmt) {
-    $stmt->bind_param("is", $idEmpleado, $hoy);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    while ($row = $result->fetch_assoc()) {
-        $ventasHoy[$row['idVenta']]['productos'][] = [
-            'idDetalleVenta' => $row['idDetalleVenta'],
-            'nombre' => $row['Producto'],
-            'cantidad' => $row['Cantidad']
-        ];
-    }
-    $stmt->close();
-}
 
-// Procesar formulario si se envió
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("is", $idEmpleado, $hoy);
+$stmt->execute();
+$result = $stmt->get_result();
+
+while ($row = $result->fetch_assoc()) {
+    $ventasHoy[$row['idVenta']]['productos'][] = [
+        'idDetalleVenta' => $row['idDetalleVenta'],
+        'nombre' => $row['Producto'],
+        'cantidad' => $row['Cantidad']
+    ];
+}
+$stmt->close();
+
 $mensaje = "";
+$tipoMensaje = ""; // success o error
+
+// Procesar formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $idVenta = intval($_POST['Venta']);
     $tipoDevolucion = $_POST['tipoDevolucion'];
-    $motivo = trim($_POST['motivo']);
-    $motivo = $motivo ?: 'Sin motivo especificado'; // evitar NULL
+    $motivo = trim($_POST['motivo']) ?: "Sin motivo especificado";
 
-    if ($tipoDevolucion === 'Producto') {
-        $idDetalleVenta = intval($_POST['idDetalleVenta']);
-        $cantidadDevuelta = intval($_POST['cantidadDevuelta']);
+    try {
+        if ($tipoDevolucion === 'Producto') {
+            $idDetalleVenta = intval($_POST['idDetalleVenta']);
+            $cantidadDevuelta = intval($_POST['cantidadDevuelta']);
 
-        $stmt = $conn->prepare("CALL DevolverProductoIndividual(?, ?, ?, ?, ?)");
-        if ($stmt) {
+            $stmt = $conn->prepare("CALL DevolverProductoIndividual(?, ?, ?, ?, ?)");
             $stmt->bind_param("iiisi", $idVenta, $idDetalleVenta, $cantidadDevuelta, $motivo, $idEmpleado);
-        } else {
-            $mensaje = "Error al preparar la llamada a DevolverProductoIndividual.";
-        }
 
-    } elseif ($tipoDevolucion === 'VentaCompleta') {
-        $stmt = $conn->prepare("CALL DevolverVentaCompleta(?, ?, ?)");
-        if ($stmt) {
-            // Orden correcto: (INT, STRING, INT)
+        } else {
+            $stmt = $conn->prepare("CALL DevolverVentaCompleta(?, ?, ?)");
             $stmt->bind_param("isi", $idVenta, $motivo, $idEmpleado);
-        } else {
-            $mensaje = "Error al preparar la llamada a DevolverVentaCompleta.";
         }
+
+        $stmt->execute();
+        $mensaje = "Devolución realizada con éxito.";
+        $tipoMensaje = "success"; // verde
+
+    } catch (mysqli_sql_exception $e) {
+        $mensaje = "Error: " . $e->getMessage();
+        $tipoMensaje = "error"; // rojo
     }
 
-    if (isset($stmt) && $stmt) {
-        try {
-            $stmt->execute();
-            $mensaje = "✅ Devolución registrada correctamente.";
-        } catch (mysqli_sql_exception $e) {
-            $mensaje = "❌ Error al registrar la devolución: " . $e->getMessage();
-        }
-        $stmt->close();
-
-        // Limpia resultados de procedimientos previos
-        while ($conn->more_results() && $conn->next_result()) {;}
-    }
+    while ($conn->more_results() && $conn->next_result()) {}
 }
 
 $conn->close();
@@ -111,8 +99,14 @@ $conn->close();
 <link rel="icon" type="image/png" href="imagenes/Logo.png">
 </head>
 <body>
+
+<?php if ($mensaje): ?>
+<div class="floating-message <?php echo $tipoMensaje === 'success' ? 'floating-success' : 'floating-error'; ?>">
+    <?php echo htmlspecialchars($mensaje); ?>
+</div>
+<?php endif; ?>
+
 <div class="dashboard-container">
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="logo">
       <img src="imagenes/Logo.png" alt="Logo" class="icon">
@@ -146,15 +140,13 @@ $conn->close();
       </a>
     </nav>
   </aside>
-
-  <!-- Main content -->
   <main class="main-content">
-    <!-- Topbar -->
+
     <header class="topbar">
       <h2>Registrar Devolución</h2>
       <div class="user-profile">
         <a href="EditarPerfilEmpleado.php">
-          <img src="<?php echo htmlspecialchars($imagen); ?>" alt="Avatar" class="avatar">
+          <img src="<?php echo htmlspecialchars($imagen); ?>" class="avatar">
         </a>
         <div class="user-info">
           <span class="user-name"><?php echo htmlspecialchars($nombreCompleto); ?></span>
@@ -163,61 +155,52 @@ $conn->close();
       </div>
     </header>
 
-    <!-- Mensaje -->
-    <?php if($mensaje): ?>
-      <div style="text-align:center; margin:10px; color:green;"><?php echo htmlspecialchars($mensaje); ?></div>
-    <?php endif; ?>
-
-    <!-- Formulario -->
     <section class="form-section">
       <form class="form-card" action="" method="POST">
-        <!-- SOLO NÚMERO DE VENTA -->
+
         <div class="form-group">
-          <select id="Venta" name="Venta" required>
+          <select name="Venta" id="Venta" required>
             <option value="" disabled selected>Seleccione una venta del día</option>
-            <?php foreach($ventasHoy as $idVenta => $venta): ?>
-              <option value="<?php echo $idVenta; ?>">
-                Venta - Numero <?php echo $idVenta; ?>
-              </option>
+            <?php foreach($ventasHoy as $idVenta => $v): ?>
+              <option value="<?= $idVenta ?>">Venta - Número <?= $idVenta ?></option>
             <?php endforeach; ?>
           </select>
-          <label for="Venta">Venta del día</label>
+          <label>Venta del día</label>
         </div>
 
         <div class="form-group">
-          <select id="tipoDevolucion" name="tipoDevolucion" required>
-            <option value="" disabled selected>Seleccione tipo de devolución</option>
+          <select name="tipoDevolucion" id="tipoDevolucion" required>
+            <option value="" disabled selected>Seleccione tipo</option>
             <option value="VentaCompleta">Devolver Venta Completa</option>
-            <option value="Producto">Devolver Producto Específico</option>
+            <option value="Producto">Devolver Producto</option>
           </select>
-          <label for="tipoDevolucion">Tipo de Devolución</label>
+          <label>Tipo de Devolución</label>
         </div>
 
         <div class="form-group conditional producto-only">
           <select id="idDetalleVenta" name="idDetalleVenta">
             <option value="">Seleccione producto</option>
           </select>
-          <label for="idDetalleVenta">Producto a Devolver</label>
+          <label>Producto a Devolver</label>
         </div>
 
         <div class="form-group conditional producto-only">
-          <input type="number" id="cantidadDevuelta" name="cantidadDevuelta" min="1" placeholder=" ">
-          <label for="cantidadDevuelta">Cantidad a Devolver</label>
+          <input type="number" name="cantidadDevuelta" min="1" placeholder=" ">
+          <label>Cantidad</label>
         </div>
 
         <div class="form-group">
-          <textarea id="motivo" name="motivo" placeholder=" " rows="3" maxlength="200" required></textarea>
-          <label for="motivo">Motivo de la Devolución</label>
+          <textarea name="motivo" placeholder=" " required></textarea>
+          <label>Motivo de la devolución</label>
         </div>
 
         <div class="form-actions">
-          <button type="submit" class="btn-submit">Registrar Devolución</button>
+          <button class="btn-submit" type="submit">Registrar Devolución</button>
         </div>
+
       </form>
     </section>
-    <footer class="site-footer">
-      <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
-    </footer>
+
   </main>
 </div>
 
@@ -226,31 +209,30 @@ const tipoDevolucion = document.getElementById("tipoDevolucion");
 const productoFields = document.querySelectorAll(".producto-only");
 
 tipoDevolucion.addEventListener("change", () => {
-  if (tipoDevolucion.value === "Producto") {
-    productoFields.forEach(el => el.style.display = "block");
-  } else {
-    productoFields.forEach(el => el.style.display = "none");
-  }
+    const visible = tipoDevolucion.value === "Producto";
+    productoFields.forEach(e => e.style.display = visible ? "block" : "none");
 });
-productoFields.forEach(el => el.style.display = "none");
+productoFields.forEach(e => e.style.display = "none");
 
-// --- JavaScript para cargar productos según venta seleccionada ---
 const ventasHoy = <?php echo json_encode($ventasHoy); ?>;
 const ventaSelect = document.getElementById("Venta");
 const detalleSelect = document.getElementById("idDetalleVenta");
 
 ventaSelect.addEventListener("change", () => {
-    const ventaId = ventaSelect.value;
+    const id = ventaSelect.value;
     detalleSelect.innerHTML = '<option value="">Seleccione producto</option>';
-    if (ventasHoy[ventaId]) {
-        ventasHoy[ventaId].productos.forEach(p => {
+
+    if (ventasHoy[id]) {
+        ventasHoy[id].productos.forEach(p => {
             const opt = document.createElement("option");
             opt.value = p.idDetalleVenta;
-            opt.textContent = p.nombre + " (x" + p.cantidad + ")";
+            opt.textContent = `${p.nombre} (x${p.cantidad})`;
             detalleSelect.appendChild(opt);
         });
     }
 });
 </script>
+
 </body>
 </html>
+

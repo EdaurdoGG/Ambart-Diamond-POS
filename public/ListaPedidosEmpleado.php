@@ -43,7 +43,7 @@ if (isset($_GET['accion']) && isset($_GET['id'])) {
     } elseif ($accion === "Atendido") {
         $tipoPago = "Efectivo"; // Puedes cambiar a dinámico si deseas
         $stmt = $conn->prepare("CALL ProcesarVentaPedido(?, ?, ?)");
-        $stmt->bind_param("iis", $idPedido, $idEmpleado, $tipoPago); // 👈 Se agrega $idEmpleado
+        $stmt->bind_param("iis", $idPedido, $idEmpleado, $tipoPago);
         $stmt->execute();
         $stmt->close();
     }
@@ -53,28 +53,47 @@ if (isset($_GET['accion']) && isset($_GET['id'])) {
     exit();
 }
 
-// Filtro de fecha si se envió
-$fechaFiltro = $_GET['fecha'] ?? date('Y-m-d');
+// Filtro de fecha si se envió, NULL si no
+$fechaFiltro = $_GET['fecha'] ?? null;
 
-$stmtPedidos = $conn->prepare("
-    SELECT 
-        dp.idPedido,
-        dp.Usuario,
-        dp.Fecha,
-        dp.Estatus,
-        GROUP_CONCAT(CONCAT(dp.Producto, ' x', dp.Cantidad) SEPARATOR ', ') AS Productos,
-        SUM(dp.Total) AS Total
-    FROM PedidosCompletos dp
-    WHERE DATE(dp.Fecha) = ? AND dp.Estatus = 'Pendiente'
-    GROUP BY dp.idPedido, dp.Usuario, dp.Fecha, dp.Estatus
-    ORDER BY dp.Fecha DESC
-");
-$stmtPedidos->bind_param("s", $fechaFiltro);
+// Ajustar consulta SQL según si hay fecha o no
+if ($fechaFiltro) {
+    $stmtPedidos = $conn->prepare("
+        SELECT 
+            dp.idPedido,
+            dp.Usuario,
+            dp.Fecha,
+            dp.Estatus,
+            GROUP_CONCAT(CONCAT(dp.Producto, ' x', dp.Cantidad) SEPARATOR ', ') AS Productos,
+            SUM(dp.Total) AS Total
+        FROM PedidosCompletos dp
+        WHERE DATE(dp.Fecha) = ? AND dp.Estatus = 'Pendiente'
+        GROUP BY dp.idPedido, dp.Usuario, dp.Fecha, dp.Estatus
+        ORDER BY dp.Fecha DESC
+    ");
+    $stmtPedidos->bind_param("s", $fechaFiltro);
+} else {
+    $stmtPedidos = $conn->prepare("
+        SELECT 
+            dp.idPedido,
+            dp.Usuario,
+            dp.Fecha,
+            dp.Estatus,
+            GROUP_CONCAT(CONCAT(dp.Producto, ' x', dp.Cantidad) SEPARATOR ', ') AS Productos,
+            SUM(dp.Total) AS Total
+        FROM PedidosCompletos dp
+        WHERE dp.Estatus = 'Pendiente'
+        GROUP BY dp.idPedido, dp.Usuario, dp.Fecha, dp.Estatus
+        ORDER BY dp.Fecha DESC
+    ");
+}
+
 $stmtPedidos->execute();
 $resultPedidos = $stmtPedidos->get_result();
 
 $conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="es">

@@ -7,8 +7,7 @@ if (!isset($_SESSION['idPersona']) || ($_SESSION['rol'] ?? 0) != 1) {
     exit();
 }
 
-$mensaje = "";
-$tipoMensaje = ""; // <-- nuevo para distinguir éxito o error
+$idPersona = $_SESSION['idPersona'];
 
 // Conexión
 require_once "../includes/conexion.php";
@@ -16,9 +15,10 @@ require_once "../includes/conexion.php";
 // Asignar el id del usuario logueado a la variable @id_usuario_actual
 $conn->query("SET @id_usuario_actual = " . intval($_SESSION['idPersona']));
 
-// ===========================
+$mensaje = "";
+$tipoMensaje = ""; 
+
 // Obtener datos del administrador logueado
-// ===========================
 $idAdmin = $_SESSION['idPersona'];
 
 $stmt = $conn->prepare("SELECT Nombre, ApellidoPaterno, ApellidoMaterno, Email, Telefono, Imagen, Rol 
@@ -34,9 +34,7 @@ $stmt->bind_result($nombre, $apellidoP, $apellidoM, $email, $telefono, $imagen, 
 $stmt->fetch();
 $stmt->close();
 
-// ===========================
 // Obtener todas las categorías
-// ===========================
 $categorias = [];
 $result = $conn->query("SELECT idCategoria, Nombre FROM Categoria ORDER BY Nombre");
 if ($result) {
@@ -46,9 +44,7 @@ if ($result) {
     $result->free();
 }
 
-// ===========================
 // Procesar formulario
-// ===========================
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombreProducto = $_POST['nombre'] ?? '';
     $precioCompra = $_POST['precioCompra'] ?? 0;
@@ -97,10 +93,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
 
         if ($stmt->execute()) {
-            $mensaje = "✅ Producto agregado correctamente.";
+            $mensaje = "Producto agregado correctamente.";
             $tipoMensaje = "exito";
         } else {
-            $mensaje = "❌ Error al agregar el producto: " . $stmt->error;
+            $mensaje = "Error al agregar el producto: " . $stmt->error;
             $tipoMensaje = "error";
         }
         $stmt->close();
@@ -129,11 +125,12 @@ $conn->close();
       setTimeout(() => {
         const msg = document.querySelector('.mensaje-flotante');
         if (msg) msg.remove();
-      }, 5000); // desaparecer a los 5 segundos
+      }, 3000); 
     </script>
   <?php endif; ?>
 
   <div class="dashboard-container">
+
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="logo">
@@ -141,55 +138,30 @@ $conn->close();
         <span>Amber Diamond</span>
       </div>
       <nav class="menu">
-        <a href="InicioAdministradores.php" class="menu-item">
-          <img src="imagenes/Inicio.png" alt="Inicio" class="icon"> Inicio
-        </a>
-        <a href="ListaVentasAdministrador.php" class="menu-item">
-          <img src="imagenes/Ventas.png" alt="Ventas" class="icon"> Ventas
-        </a>
-        <a href="ListaPedidosAdministrador.php" class="menu-item">
-          <img src="imagenes/Pedidos.png" alt="Pedidos" class="icon"> Pedidos
-        </a>
-        <a href="ListaProductosAdministrador.php" class="menu-item active">
-          <img src="imagenes/Productos.png" alt="Productos" class="icon"> Productos
-        </a>
-        <a href="ListaClientesAdministrado.php" class="menu-item">
-          <img src="imagenes/Clientes.png" alt="Clientes" class="icon"> Clientes
-        </a>
-        <a href="ListaEmpleadosAdministrador.php" class="menu-item">
-          <img src="imagenes/Empleados.png" alt="Empleados" class="icon"> Empleados
-        </a>
-        <a href="ListaDevolucionesAdministrador.php" class="menu-item">
-          <img src="imagenes/Devoluciones.png" alt="Devoluciones" class="icon"> Devoluciones
-        </a>
-        <a href="FinanzasAdministrador.php" class="menu-item">
-          <img src="imagenes/Finanzas.png" alt="Finanzas" class="icon"> Finanzas
-        </a>
-        <a href="Auditorias.php" class="menu-item">
-          <img src="imagenes/Auditorias.png" alt="Auditorias" class="icon"> Control y Auditoría
-        </a>
-        <a href="QuejaSugerenciaAdministrador.php" class="menu-item">
-          <img src="imagenes/QuejasSujerencias.png" alt="QuejasSujerencias" class="icon"> QuejasSujerencias
-        </a>
+        <a href="InicioAdministradores.php" class="menu-item"><img src="imagenes/Inicio.png" class="icon"> Inicio</a>
+        <a href="ListaVentasAdministrador.php" class="menu-item"><img src="imagenes/Ventas.png" class="icon"> Ventas</a>
+        <a href="ListaPedidosAdministrador.php" class="menu-item"><img src="imagenes/Pedidos.png" class="icon"> Pedidos</a>
+        <a href="ListaProductosAdministrador.php" class="menu-item active"><img src="imagenes/Productos.png" class="icon"> Productos</a>
+        <a href="ListaClientesAdministrado.php" class="menu-item"><img src="imagenes/Clientes.png" class="icon"> Clientes</a>
+        <a href="ListaEmpleadosAdministrador.php" class="menu-item"><img src="imagenes/Empleados.png" class="icon"> Empleados</a>
+        <a href="ListaDevolucionesAdministrador.php" class="menu-item"><img src="imagenes/Devoluciones.png" class="icon"> Devoluciones</a>
+        <a href="FinanzasAdministrador.php" class="menu-item"><img src="imagenes/Finanzas.png" class="icon"> Finanzas</a>
+        <a href="Auditorias.php" class="menu-item"><img src="imagenes/Auditorias.png" class="icon"> Control y Auditoría</a>
+        <a href="QuejaSugerenciaAdministrador.php" class="menu-item"><img src="imagenes/QuejasSujerencias.png" class="icon"> QuejasSujerencias</a>
         <div class="menu-separator"></div>
-        <a href="Login.php" class="menu-item logout">
-          <img src="imagenes/salir.png" alt="Cerrar sesión" class="icon"> Cerrar sesión
-        </a>
+        <a href="Login.php" class="menu-item logout"><img src="imagenes/salir.png" class="icon"> Cerrar sesión</a>
       </nav>
     </aside>
 
     <main class="main-content">
-      <!-- Topbar -->
+
       <header class="topbar">
-        <div class="search-box">
-          <h2>Agregar Producto</h2>
-        </div>
+        <div class="search-box"><h2>Agregar Producto</h2></div>
+
         <div class="user-profile">
-          <a href="AlertasAdministrador.php">
-            <img src="imagenes/Notificasion.png" alt="Notificaciones" class="icon notification">
-          </a>
+          <a href="AlertasAdministrador.php"><img src="imagenes/Notificasion.png" class="icon notification"></a>
           <a href="EditarPerfilAdministrador.php">
-            <img src="<?= htmlspecialchars($imagen ?: 'imagenes/User.png') ?>" alt="Avatar" class="avatar"> 
+            <img src="<?= htmlspecialchars($imagen ?: 'imagenes/User.png') ?>" class="avatar">
           </a>
           <div class="user-info">
             <span class="user-name"><?= htmlspecialchars("$nombre $apellidoP $apellidoM") ?></span>
@@ -198,9 +170,8 @@ $conn->close();
         </div>
       </header>
 
-      <!-- Formulario -->
       <section class="form-section">
-        <form class="form-card" method="POST" action="" enctype="multipart/form-data">
+        <form class="form-card" method="POST" enctype="multipart/form-data">
 
           <div class="form-group">
             <input type="text" id="nombre" name="nombre" placeholder=" " required>
@@ -245,11 +216,14 @@ $conn->close();
           <div class="form-actions">
             <button type="submit" class="btn-submit">Registrar Producto</button>
           </div>
+
         </form>
       </section>
+
       <footer class="site-footer">
         <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
       </footer>
+
     </main>
   </div>
 </body>

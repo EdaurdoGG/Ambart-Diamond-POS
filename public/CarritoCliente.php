@@ -26,16 +26,22 @@ $nombreCompleto = $cliente ? $cliente['Nombre'] . ' ' . $cliente['ApellidoPatern
 $rol = $cliente ? $cliente['Rol'] : 'Cliente';
 $imagenPerfil = $cliente && $cliente['Imagen'] ? $cliente['Imagen'] : 'imagenes/User.png';
 
-// Función para ejecutar procedimientos
-function ejecutarProcedimiento($conn, $sql) {
+// Función para ejecutar procedimientos y retornar mensaje
+function ejecutarProcedimiento($conn, $sql, $mensajeExito = '', $mensajeError = 'Error en procedimiento') {
     if ($conn->multi_query($sql)) {
         do {
             if ($result = $conn->store_result()) {
                 $result->free();
             }
         } while ($conn->more_results() && $conn->next_result());
+
+        if ($mensajeExito) {
+            $_SESSION['mensaje'] = $mensajeExito;
+            $_SESSION['tipo_mensaje'] = 'success';
+        }
     } else {
-        die("Error en procedimiento: " . $conn->error);
+        $_SESSION['mensaje'] = $mensajeError . ': ' . $conn->error;
+        $_SESSION['tipo_mensaje'] = 'error';
     }
 }
 
@@ -54,12 +60,11 @@ if (isset($_GET['accion'])) {
     }
 
     if ($accion === 'procesar') {
-        ejecutarProcedimiento($conn, "CALL CrearPedidoDesdeCarrito($idPersona)");
+        ejecutarProcedimiento($conn, "CALL CrearPedidoDesdeCarrito($idPersona)", 'Pedido realizado con éxito', 'Error al procesar pedido');
     }
 
-    // 🔹 Nuevo: Vaciar carrito
     if ($accion === 'vaciar') {
-        ejecutarProcedimiento($conn, "CALL VaciarCarritoPorPersona($idPersona)");
+        ejecutarProcedimiento($conn, "CALL VaciarCarritoPorPersona($idPersona)", 'Carrito vaciado', 'No se pudo vaciar el carrito');
     }
 
     header("Location: CarritoCliente.php");
@@ -97,7 +102,19 @@ $conn->close();
   <link rel="icon" type="image/png" href="imagenes/Logo.png">
 </head>
 <body>
-  <div class="dashboard-container">
+
+<!-- MENSAJE DINÁMICO -->
+<?php if (!empty($_SESSION['mensaje'])): ?>
+<div class="alert-message <?= ($_SESSION['tipo_mensaje'] ?? '') === 'error' ? 'alert-error' : 'alert-success' ?>">
+    <?= htmlspecialchars($_SESSION['mensaje']) ?>
+</div>
+<?php
+unset($_SESSION['mensaje']);
+unset($_SESSION['tipo_mensaje']);
+?>
+<?php endif; ?>
+
+<div class="dashboard-container">
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="logo">

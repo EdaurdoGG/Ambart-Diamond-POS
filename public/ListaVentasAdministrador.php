@@ -1,16 +1,18 @@
 <?php
 session_start();
 
-// Verificar que el usuario esté logueado y sea administrador
+// Verificar que el usuario esté logueado y sea administrador (rol = 1)
 if (!isset($_SESSION['idPersona']) || ($_SESSION['rol'] ?? 0) != 1) {
     header("Location: Login.php");
     exit();
 }
 
+$idPersona = $_SESSION['idPersona'];
+
 // Conexión
 require_once "../includes/conexion.php";
 
-// Asignar el id del usuario logueado
+// Asignar el id del usuario logueado a la variable @id_usuario_actual
 $conn->query("SET @id_usuario_actual = " . intval($_SESSION['idPersona']));
 
 // Datos del administrador

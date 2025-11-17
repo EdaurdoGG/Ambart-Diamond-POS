@@ -1,14 +1,39 @@
 <?php
 session_start();
 
-// Verificación de sesión
+// Verificar que el usuario esté logueado y sea administrador (rol = 1)
 if (!isset($_SESSION['idPersona']) || ($_SESSION['rol'] ?? 0) != 1) {
     header("Location: Login.php");
     exit();
 }
 
+$idPersona = $_SESSION['idPersona'];
+
 // Conexión
 require_once "../includes/conexion.php";
+
+// Asignar el id del usuario logueado a la variable @id_usuario_actual
+$conn->query("SET @id_usuario_actual = " . intval($_SESSION['idPersona']));
+
+// ELIMINAR QUEJA/SUGERENCIA DESDE EL MISMO ARCHIVO
+if (isset($_GET['eliminar'])) {
+    $idEliminar = intval($_GET['eliminar']);
+
+    $delete = $conn->prepare("DELETE FROM SugerenciaQueja WHERE idSugerenciaQueja = ?");
+    $delete->bind_param("i", $idEliminar);
+
+    if ($delete->execute()) {
+        $_SESSION['mensaje'] = "La queja/sugerencia se eliminó correctamente.";
+        $_SESSION['tipo_mensaje'] = "success";
+    } else {
+        $_SESSION['mensaje'] = "Error al eliminar la queja/sugerencia.";
+        $_SESSION['tipo_mensaje'] = "error";
+    }
+
+    $delete->close();
+    header("Location: QuejaSugerenciaAdministrador.php");
+    exit();
+}
 
 // Datos del usuario logeado
 $idUsuario = $_SESSION['idPersona'];
@@ -52,6 +77,17 @@ $resultado = $stmt->get_result();
 <link rel="icon" type="image/png" href="imagenes/Logo.png">
 </head>
 <body>
+
+<?php if (!empty($_SESSION['mensaje'])): ?>
+    <div class="alert-message <?= ($_SESSION['tipo_mensaje'] ?? "") === "error" ? "alert-error" : "alert-success" ?>">
+        <?= htmlspecialchars($_SESSION['mensaje']) ?>
+    </div>
+    <?php
+        unset($_SESSION['mensaje']);
+        unset($_SESSION['tipo_mensaje']);
+    ?>
+<?php endif; ?>
+
 <div class="dashboard-container">
     <!-- Barra lateral -->
     <aside class="sidebar">
@@ -127,13 +163,11 @@ $resultado = $stmt->get_result();
         <section class="user-table-section">
 
             <div class="table-actions">
-                <!-- Exportar datos filtrados por fecha -->
                 <form method="GET" action="ExportarQuejaSugerenciaPorFecha.php" style="display:inline;">
                     <input type="hidden" name="fecha" value="<?= htmlspecialchars($fechaFiltro) ?>">
                     <button type="submit" class="btn-primary">Exportar por Fecha</button>
                 </form>
 
-                <!-- Exportar todos los datos -->
                 <form method="GET" action="ExportarTodasLasQuejaSugerencia.php" style="display:inline;">
                     <button type="submit" class="btn-secondary">Exportar Todo</button>
                 </form>
@@ -162,7 +196,7 @@ $resultado = $stmt->get_result();
                                 <td><?= htmlspecialchars($fila['Descripcion']) ?></td>
                                 <td><?= htmlspecialchars($fila['Fecha']) ?></td>
                                 <td>
-                                  <a href="BorrarQuejaSugerencia.php?id=<?= $fila['idSugerenciaQueja'] ?>">
+                                  <a href="QuejaSugerenciaAdministrador.php?eliminar=<?= $fila['idSugerenciaQueja'] ?>">
                                       <img src="imagenes/Borrar.png" alt="Eliminar" class="action-icon" title="Eliminar"> 
                                   </a>
                                 </td>
@@ -174,9 +208,10 @@ $resultado = $stmt->get_result();
                 </tbody>
             </table>
         </section>
-          <footer class="site-footer">
+
+        <footer class="site-footer">
             <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
-          </footer>
+        </footer>
     </main>
 </div>
 </body>

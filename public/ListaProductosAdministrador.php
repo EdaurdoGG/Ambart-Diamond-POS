@@ -7,6 +7,8 @@ if (!isset($_SESSION['idPersona']) || ($_SESSION['rol'] ?? 0) != 1) {
     exit();
 }
 
+$idPersona = $_SESSION['idPersona'];
+
 // Conexión
 require_once "../includes/conexion.php";
 
@@ -47,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['busqueda'])) {
     $stmt->close();
 } else {
     // Mostrar todos los productos si no hay búsqueda
-    $sql = "SELECT idProducto, Producto, Categoria, Existencia, PrecioCompra, PrecioVenta, Imagen, Estado FROM ProductosConEstado";
+    $sql = "SELECT idProducto, Producto, Categoria, Existencia, PrecioCompra, PrecioVenta, Imagen FROM ProductosConEstado";
     $result = $conn->query($sql);
 }
 ?>
@@ -142,7 +144,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['busqueda'])) {
         <form action="ExportarListaProductos.php" method="GET">
           <button type="submit" class="btn-secondary">Exportar Productos</button>
         </form>
-
       </div>
 
       <!-- Catalogo de tarjetas -->
@@ -153,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['busqueda'])) {
               <img src="<?= htmlspecialchars($row['Imagen']) ?>" alt="<?= htmlspecialchars($row['Producto']) ?>" class="card-img">
               <div class="card-info">
                 <h3><?= htmlspecialchars($row['Producto']) ?></h3>
-                <p>Categoría: <?= htmlspecialchars($row['Categoria']) ?> | Estado: <?= htmlspecialchars($row['Estado']) ?></p>
+                <p>Categoría: <?= htmlspecialchars($row['Categoria']) ?> | Cantidad: <?= htmlspecialchars($row['Existencia']) ?></p>
                 <span class="price">$<?= number_format($row['PrecioVenta'], 2) ?></span>
                 <div class="card-actions">
                   <a href="EditarProductoAdministrador.php?id=<?= $row['idProducto'] ?>">

@@ -71,10 +71,6 @@ $conn->close();
   <title>Registrar Queja o Sugerencia</title>
   <link rel="stylesheet" href="QuejaSugerenciaEmpleado.css">
   <link rel="icon" type="image/png" href="imagenes/Logo.png">
-  <style>
-    .mensaje-success { color: green; margin-bottom: 15px; }
-    .mensaje-error { color: red; margin-bottom: 15px; }
-  </style>
 </head>
 <body>
   <div class="dashboard-container">
@@ -132,14 +128,6 @@ $conn->close();
       <!-- Formulario -->
       <section class="form-section">
         <form class="form-card" action="" method="POST">
-
-          <!-- Mensaje -->
-          <?php if (!empty($mensaje)): ?>
-            <div class="mensaje-<?php echo $tipoMensaje; ?>">
-              <?php echo htmlspecialchars($mensaje); ?>
-            </div>
-          <?php endif; ?>
-
           <!-- Tipo -->
           <div class="form-group">
             <select id="tipo" name="tipo" required>
@@ -161,10 +149,19 @@ $conn->close();
           </div>
         </form>
       </section>
+
       <footer class="site-footer">
         <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
       </footer>
     </main>
   </div>
+
+  <!-- Mensaje flotante -->
+  <?php if (!empty($mensaje)): ?>
+    <div id="mensaje-flotante" class="alert-message <?= ($tipoMensaje === 'success') ? 'alert-success' : 'alert-error' ?>">
+      <?= htmlspecialchars($mensaje) ?>
+    </div>
+  <?php endif; ?>
+
 </body>
 </html>

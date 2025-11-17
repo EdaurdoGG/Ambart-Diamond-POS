@@ -12,6 +12,9 @@ $idPersona = $_SESSION['idPersona'];
 // Conexión
 require_once "../includes/conexion.php";
 
+// Asignar el id del usuario logueado a la variable @id_usuario_actual
+$conn->query("SET @id_usuario_actual = " . intval($_SESSION['idPersona']));
+
 // Obtener información del administrador logueado
 $stmt = $conn->prepare("SELECT Nombre, ApellidoPaterno, ApellidoMaterno, Imagen, Rol 
                         FROM AdministradoresRegistrados 
