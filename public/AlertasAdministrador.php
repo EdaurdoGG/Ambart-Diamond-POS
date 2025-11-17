@@ -122,7 +122,7 @@ $productosBajoStock = $resultadoStock ? $resultadoStock->fetch_all(MYSQLI_ASSOC)
           <?php endforeach; ?>
         <?php else: ?>
           <div class="notification-card">
-            <h3>Todos los productos están con stock suficiente ✅</h3>
+            <h3>Todos los productos están con stock suficiente</h3>
           </div>
         <?php endif; ?>
       </section>

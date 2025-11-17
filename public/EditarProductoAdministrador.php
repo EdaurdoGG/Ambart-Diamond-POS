@@ -27,9 +27,7 @@ $stmt->bind_result($nombre, $apellidoP, $apellidoM, $imagen, $rol);
 $stmt->fetch();
 $stmt->close();
 
-// =========================================
 // OBTENER DATOS DEL PRODUCTO A EDITAR
-// =========================================
 $idProducto = $_GET['id'] ?? null;
 if (!$idProducto) {
     die("ID de producto no proporcionado.");
@@ -44,18 +42,14 @@ $stmt->bind_result($nombreProducto, $precioCompra, $precioVenta, $codigoBarra, $
 $stmt->fetch();
 $stmt->close();
 
-// =========================================
 // CARGAR CATEGORÍAS
-// =========================================
 $categorias = [];
 $result = $conn->query("SELECT idCategoria, Nombre FROM Categoria ORDER BY Nombre");
 while ($row = $result->fetch_assoc()) {
     $categorias[] = $row;
 }
 
-// =========================================
 // PROCESAR FORMULARIO
-// =========================================
 $mensaje = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -67,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $existenciaPost = $_POST['existencia'] ?? 0;
     $categoriaPost = $_POST['categoria'] ?? null;
 
-    $imagenPath = $imagenProducto; // mantener actual si no suben nueva
+    $imagenPath = $imagenProducto;
 
     // Subida de imagen
     if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
@@ -139,10 +133,6 @@ $conn->close();
   <link rel="icon" type="image/png" href="imagenes/Logo.png">
 </head>
 <body>
-
-  <!-- =======================
-       MENSAJE FLOTANTE
-  ======================== -->
   <?php if ($mensaje != ""): ?>
     <div class="alert-message <?= strpos($mensaje, 'Error') !== false ? 'alert-error' : '' ?>">
         <?= htmlspecialchars($mensaje) ?>

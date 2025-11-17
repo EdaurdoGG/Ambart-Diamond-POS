@@ -25,9 +25,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['idPedido'])) {
     $stmtCancel->bind_param("i", $idPedido);
 
     if ($stmtCancel->execute()) {
-        $mensaje = "✅ Pedido #$idPedido cancelado exitosamente.";
+        $mensaje = "Pedido #$idPedido cancelado exitosamente.";
     } else {
-        $mensaje = "❌ Error al cancelar el pedido: " . $stmtCancel->error;
+        $mensaje = "Error al cancelar el pedido: " . $stmtCancel->error;
     }
 
     $stmtCancel->close();

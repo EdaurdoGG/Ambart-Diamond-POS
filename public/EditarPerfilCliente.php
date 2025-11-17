@@ -61,13 +61,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizarInfo'])) {
     $stmt->bind_param("issssss", $idPersona, $nombreNuevo, $apellidoPNuevo, $apellidoMNuevo, $emailNuevo, $telefonoNuevo, $imagenNueva);
 
     if ($stmt->execute()) {
-        // Actualizar variables para mostrar en el formulario
         $nombre = $nombreNuevo;
         $apellidoP = $apellidoPNuevo;
         $apellidoM = $apellidoMNuevo;
         $email = $emailNuevo;
         $telefono = $telefonoNuevo;
-        $imagen = $imagenNueva; // actualizar imagen mostrada
+        $imagen = $imagenNueva; 
     } else {
         $mensaje = "Error al actualizar el perfil: " . $stmt->error;
     }

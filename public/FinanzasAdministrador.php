@@ -30,7 +30,7 @@ $stmt->fetch();
 $stmt->close();
 
 // Manejar filtro de fecha
-$fechaFiltro = $_GET['fecha'] ?? date('Y-m-d'); // si no hay fecha, tomar fecha actual
+$fechaFiltro = $_GET['fecha'] ?? date('Y-m-d');
 
 // Consultar la vista VistaFinanzasPorFecha filtrando por fecha
 $sqlFinanzas = "SELECT *

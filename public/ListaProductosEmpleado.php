@@ -31,7 +31,7 @@ $nombreCompleto = $empleado ? ($empleado['Nombre'] . ' ' . $empleado['ApellidoPa
 $rol = $empleado['Rol'] ?? 'Empleado';
 $imagenPerfil = $empleado['Imagen'] ?? 'imagenes/User.png';
 
-$mensaje = "";  // Mensaje para mostrar
+$mensaje = ""; 
 
 // Manejo de búsqueda
 $busqueda = '';
@@ -55,9 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['busqueda'])) {
     $result = $conn->query($sql);
 }
 
-// =======================
-// AGREGAR PRODUCTO AL CARRITO
-// =======================
+// GREGAR PRODUCTO AL CARRITO
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idProducto'])) {
     $idProducto = intval($_POST['idProducto']);
     $mensaje = ""; // Reiniciar mensaje

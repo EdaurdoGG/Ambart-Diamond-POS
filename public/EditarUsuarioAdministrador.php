@@ -42,9 +42,7 @@ if ($idPersonaEdit > 0) {
     $stmt->close();
 }
 
-// ============================
-// 📝 Procesar el formulario
-// ============================
+// Procesar el formulario
 $mensaje = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $idPersona      = $_POST['idPersona'];
@@ -76,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     );
 
     if ($stmt->execute()) {
-        $mensaje = "Usuario actualizado correctamente ✅";
+        $mensaje = "Usuario actualizado correctamente";
         // Recargar datos actualizados
         $stmt->close();
         $stmt = $conn->prepare("SELECT idPersona, Nombre, ApellidoPaterno, ApellidoMaterno, Telefono, Email, Edad, Sexo, Estatus, Usuario, idRol FROM Persona WHERE idPersona = ?");

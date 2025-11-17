@@ -25,7 +25,7 @@ $nombreCompleto = $empleado ? "{$empleado['Nombre']} {$empleado['ApellidoPaterno
 $rol = $empleado['Rol'] ?? 'Empleado';
 $imagenPerfil = !empty($empleado['Imagen']) ? $empleado['Imagen'] : 'imagenes/User.png';
 
-// --- Función segura para limpiar múltiples resultados ---
+// Función segura para limpiar múltiples resultados
 function limpiarResultados($conn) {
     while ($conn->more_results() && $conn->next_result()) {
         if ($res = $conn->store_result()) {
@@ -34,7 +34,7 @@ function limpiarResultados($conn) {
     }
 }
 
-// --- Función para ejecutar procedimientos almacenados ---
+// Función para ejecutar procedimientos almacenados
 function ejecutarProcedimiento($conn, $sql) {
     if (!$conn->multi_query($sql)) {
         return ['ok' => false, 'error' => $conn->error];
@@ -43,9 +43,7 @@ function ejecutarProcedimiento($conn, $sql) {
     return ['ok' => true];
 }
 
-/* ==============================
-   🔍 BÚSQUEDA DE PRODUCTOS
-   ============================== */
+// BÚSQUEDA DE PRODUCTOS
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['busqueda'])) {
     $busqueda = trim($_POST['busqueda']);
     limpiarResultados($conn);
@@ -114,9 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['busqueda'])) {
     }
 }
 
-/* ==============================
-   🛠️ ACCIONES: SUMAR / RESTAR / PROCESAR / VACIAR
-   ============================== */
+// ACCIONES: SUMAR / RESTAR / PROCESAR / VACIAR
 if (isset($_GET['accion'])) {
     $accion = $_GET['accion'];
     $idDetalle = intval($_GET['idDetalle'] ?? 0);
@@ -124,9 +120,6 @@ if (isset($_GET['accion'])) {
 
     switch ($accion) {
 
-        /* -----------------------
-           ➕ SUMAR CANTIDAD
-           ----------------------- */
         case 'sumar':
             $res = ejecutarProcedimiento($conn, "CALL SumarCantidadCarrito($idDetalle, $cantidad)");
 
@@ -140,9 +133,6 @@ if (isset($_GET['accion'])) {
             }
             break;
 
-        /* -----------------------
-           ➖ RESTAR CANTIDAD
-           ----------------------- */
         case 'restar':
             $res = ejecutarProcedimiento($conn, "CALL RestarCantidadCarrito($idDetalle, $cantidad)");
 
@@ -156,9 +146,6 @@ if (isset($_GET['accion'])) {
             }
             break;
 
-        /* -----------------------
-           ✔ PROCESAR VENTA
-           ----------------------- */
         case 'procesar':
             $res = ejecutarProcedimiento($conn, "CALL ProcesarVentaNormal($idPersona, 'Efectivo')");
             if ($res['ok']) {
@@ -170,9 +157,6 @@ if (isset($_GET['accion'])) {
             }
             break;
 
-        /* -----------------------
-           🗑️ VACIAR CARRITO
-           ----------------------- */
         case 'vaciar':
             $sql = "
                 DELETE dc FROM DetalleCarrito dc 
@@ -196,9 +180,7 @@ if (isset($_GET['accion'])) {
     exit();
 }
 
-/* ==============================
-   🧾 OBTENER CARRITO
-   ============================== */
+// OBTENER CARRITO
 $carrito = [];
 limpiarResultados($conn);
 

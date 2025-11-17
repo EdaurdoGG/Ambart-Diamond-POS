@@ -53,7 +53,7 @@ while ($row = $result->fetch_assoc()) {
 $stmt->close();
 
 $mensaje = "";
-$tipoMensaje = ""; // success o error
+$tipoMensaje = "";
 
 // Procesar formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
