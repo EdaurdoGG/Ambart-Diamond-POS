@@ -94,7 +94,12 @@ $stmtDetalles->close();
   <link rel="stylesheet" href="ListaVentasAdministrador.css">
   <link rel="icon" type="image/png" href="imagenes/Logo.png">
 </head>
+
 <body>
+
+  <!-- MENSAJE INVISIBLE QUE SE ACTIVA CON JS -->
+  <div id="msgNoVentas" class="alert-message">No hay ventas para esta fecha</div>
+
   <div class="dashboard-container">
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -103,7 +108,7 @@ $stmtDetalles->close();
         <span>Amber Diamond</span>
       </div>
       <nav class="menu">
-        <a href="InicioAdministradores.php" class="menu-item">
+      <a href="InicioAdministradores.php" class="menu-item">
           <img src="imagenes/Inicio.png" alt="Inicio" class="icon"> Inicio
         </a>
         <a href="ListaVentasAdministrador.php" class="menu-item active">
@@ -195,7 +200,7 @@ $stmtDetalles->close();
 
       <!-- Detalle de ventas -->
       <section class="finance-table">
-        <h3>Ventas del dia</h3>
+        <h3>Ventas del día</h3>
         <table>
           <thead>
             <tr>
@@ -218,12 +223,14 @@ $stmtDetalles->close();
                 </td>
               </tr>
             <?php endforeach; ?>
+
             <?php if(empty($ventas)): ?>
               <tr><td colspan="5">No hay ventas para esta fecha.</td></tr>
             <?php endif; ?>
           </tbody>
         </table>
       </section>
+
       <footer class="site-footer">
         <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
       </footer>
@@ -270,7 +277,18 @@ $stmtDetalles->close();
     window.onclick = function(e) {
       if (e.target == document.getElementById('modalDetalle')) cerrarModal();
     }
+
+    // ✔ Mostrar mensaje flotante si NO hay ventas
+    <?php if (isset($_GET['date']) && empty($ventas)): ?>
+        setTimeout(() => {
+            const msg = document.getElementById("msgNoVentas");
+            msg.classList.add("show");
+            setTimeout(() => msg.classList.remove("show"), 3000);
+        }, 300);
+    <?php endif; ?>
+
   </script>
+
 </body>
 </html>
 

@@ -16,6 +16,7 @@ require_once "../includes/conexion.php";
 $conn->query("SET @id_usuario_actual = " . intval($_SESSION['idPersona']));
 
 $mensaje = "";
+$tipoMensaje = ""; // success | error
 
 // Obtener datos del administrador desde la vista
 $stmt = $conn->prepare("SELECT Nombre, ApellidoPaterno, ApellidoMaterno, Email, Telefono, Imagen, Estado, Rol 
@@ -54,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizarInfo'])) {
             $imagenNueva = $destPath;
         } else {
             $mensaje = "Error al subir la imagen.";
+            $tipoMensaje = "error";
         }
     }
 
@@ -68,8 +70,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizarInfo'])) {
         $email = $emailNuevo;
         $telefono = $telefonoNuevo;
         $imagen = $imagenNueva;
+
+        $mensaje = "Perfil actualizado correctamente.";
+        $tipoMensaje = "success";
+
     } else {
         $mensaje = "Error al actualizar el perfil: " . $stmt->error;
+        $tipoMensaje = "error";
     }
 
     $stmt->close();
@@ -88,6 +95,13 @@ $conn->close();
 <link rel="icon" type="image/png" href="imagenes/Logo.png">
 </head>
 <body>
+
+<?php if ($mensaje != ""): ?>
+  <div class="alert-message <?= $tipoMensaje === 'success' ? 'alert-success' : 'alert-error' ?>">
+    <?= htmlspecialchars($mensaje) ?>
+  </div>
+<?php endif; ?>
+
 <div class="dashboard-container">
   <!-- Sidebar -->
   <aside class="sidebar">
@@ -150,10 +164,6 @@ $conn->close();
     <section class="profile-section">
       <form class="profile-form" method="POST" action="" enctype="multipart/form-data">
         <h2>Editar Información del Administrador</h2>
-
-        <?php if($mensaje != ""): ?>
-          <p style="color:green;"><?php echo htmlspecialchars($mensaje); ?></p>
-        <?php endif; ?>
 
         <div class="profile-header">
           <img src="<?php echo htmlspecialchars(($imagen ?: 'imagenes/User.png') . '?t=' . time()); ?>" alt="Foto de perfil" class="profile-pic">

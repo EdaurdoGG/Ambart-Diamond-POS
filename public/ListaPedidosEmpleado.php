@@ -30,6 +30,12 @@ $nombreCompleto = "$empNombre $empApellidoP $empApellidoM";
 $rol = $empRol;
 $imagen = $empImagen ?: 'imagenes/User.png';
 
+// ----------------------------
+// VARIABLES PARA MENSAJE
+// ----------------------------
+$mensaje = "";
+$tipoMensaje = "";
+
 // Procesar acción de pedido si se envía por GET
 if (isset($_GET['accion']) && isset($_GET['id'])) {
     $idPedido = $_GET['id'];
@@ -40,20 +46,27 @@ if (isset($_GET['accion']) && isset($_GET['id'])) {
         $stmt->bind_param("i", $idPedido);
         $stmt->execute();
         $stmt->close();
+
+        $mensaje = "El pedido ha sido cancelado correctamente.";
+        $tipoMensaje = "error"; // rojo
+
     } elseif ($accion === "Atendido") {
-        $tipoPago = "Efectivo"; // Puedes cambiar a dinámico si deseas
+        $tipoPago = "Efectivo"; 
         $stmt = $conn->prepare("CALL ProcesarVentaPedido(?, ?, ?)");
         $stmt->bind_param("iis", $idPedido, $idEmpleado, $tipoPago);
         $stmt->execute();
         $stmt->close();
+
+        $mensaje = "El pedido fue atendido exitosamente.";
+        $tipoMensaje = "success"; // verde
     }
 
-    // Redirigir para evitar reenvío de formulario
-    header("Location: ListaPedidosEmpleado.php");
+    // Redirigir enviando mensaje
+    header("Location: ListaPedidosEmpleado.php?msg=" . urlencode($mensaje) . "&type=" . urlencode($tipoMensaje));
     exit();
 }
 
-// Filtro de fecha si se envió, NULL si no
+// Filtro de fecha
 $fechaFiltro = $_GET['fecha'] ?? null;
 
 // Ajustar consulta SQL según si hay fecha o no
@@ -91,6 +104,12 @@ if ($fechaFiltro) {
 $stmtPedidos->execute();
 $resultPedidos = $stmtPedidos->get_result();
 
+// Mensaje si se filtró fecha y no hay resultados
+if ($fechaFiltro && $resultPedidos->num_rows == 0) {
+    $mensaje = "No se encontraron pedidos para la fecha seleccionada.";
+    $tipoMensaje = "error";
+}
+
 $conn->close();
 ?>
 
@@ -104,7 +123,41 @@ $conn->close();
 <link rel="stylesheet" href="ListaPedidosEmpleado.css">
 <link rel="icon" type="image/png" href="imagenes/Logo.png">
 </head>
+
 <body>
+
+<!-- MOSTRAR MENSAJE SI EXISTE -->
+<?php if (!empty($_GET['msg']) && !empty($_GET['type'])): ?>
+<div id="alert" class="alert-message alert-<?= htmlspecialchars($_GET['type']) ?>">
+    <?= htmlspecialchars($_GET['msg']) ?>
+</div>
+<script>
+setTimeout(() => {
+    const alert = document.getElementById("alert");
+    if(alert){
+        alert.classList.add("show");
+        setTimeout(() => alert.classList.remove("show"), 3000);
+    }
+}, 200);
+</script>
+<?php endif; ?>
+
+<?php if (!empty($mensaje) && empty($_GET['msg'])): ?>
+<div id="alert2" class="alert-message alert-<?= $tipoMensaje ?>">
+    <?= $mensaje ?>
+</div>
+<script>
+setTimeout(() => {
+    const alert = document.getElementById("alert2");
+    if(alert){
+        alert.classList.add("show");
+        setTimeout(() => alert.classList.remove("show"), 3000);
+    }
+}, 200);
+</script>
+<?php endif; ?>
+
+
 <div class="dashboard-container">
   <!-- Sidebar -->
   <aside class="sidebar">
@@ -162,7 +215,6 @@ $conn->close();
     </header>
 
     <div class="table-actions">
-      <!-- Exportar todos los pedidos pendientes -->
       <form method="GET" action="ExportarListaTodosLosPedidosPendientes.php" style="display:inline;">
         <button type="submit" class="btn-primary">Exportar Todos los Pedidos Pendientes</button>
       </form>
@@ -203,10 +255,12 @@ $conn->close();
           </div>
       <?php endif; ?>
     </section>
+
     <footer class="site-footer">
       <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
     </footer>
   </main>
 </div>
+
 </body>
 </html>

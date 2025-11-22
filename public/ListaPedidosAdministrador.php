@@ -30,6 +30,18 @@ $stmtAdmin->close();
 // Filtro de fecha si se envió
 $fechaFiltro = $_GET['fecha'] ?? '';
 
+// MENSAJE FLOTANTE
+$alertMessage = '';
+$alertClass = '';
+
+// Validación para mostrar mensaje si se intenta exportar sin seleccionar fecha
+if (isset($_GET['export']) && $_GET['export'] === 'fecha') {
+    if (empty($fechaFiltro)) {
+        $alertMessage = "Debes seleccionar una fecha para exportar pedidos.";
+        $alertClass = "alert-error";
+    }
+}
+
 // Obtener pedidos completos según fecha
 if (!empty($fechaFiltro)) {
     $stmtPedidos = $conn->prepare("
@@ -65,6 +77,12 @@ if (!empty($fechaFiltro)) {
 $stmtPedidos->execute();
 $resultPedidos = $stmtPedidos->get_result();
 
+// Si se filtró por fecha y NO HAY PEDIDOS → mensaje
+if (!empty($fechaFiltro) && $resultPedidos->num_rows === 0) {
+    $alertMessage = "No hay pedidos en la fecha seleccionada.";
+    $alertClass = "alert-error";
+}
+
 $conn->close();
 ?>
 
@@ -78,6 +96,13 @@ $conn->close();
   <link rel="icon" type="image/png" href="imagenes/Logo.png">
 </head>
 <body>
+
+<?php if (!empty($alertMessage)): ?>
+  <div class="alert-message <?= $alertClass ?>">
+      <?= htmlspecialchars($alertMessage) ?>
+  </div>
+<?php endif; ?>
+
   <div class="dashboard-container">
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -151,9 +176,11 @@ $conn->close();
       </header>
 
      <div class="table-actions">
+
       <!-- Exportar pedidos filtrados por fecha -->
-      <form method="GET" action="ExportarListaPedidosFecha.php" style="display:inline;">
+      <form method="GET" action="" style="display:inline;">
           <input type="hidden" name="fecha" value="<?= htmlspecialchars($fechaFiltro) ?>">
+          <input type="hidden" name="export" value="fecha">
           <button type="submit" class="btn-primary">Exportar Pedidos</button>
       </form>
 
@@ -161,7 +188,8 @@ $conn->close();
       <form method="GET" action="ExportarListaTodosLosPedidos.php" style="display:inline;">
           <button type="submit" class="btn-secondary">Exportar Todos los Pedidos</button>
       </form>
-    </div>
+
+     </div>
 
       <!-- Sección de Pedidos -->
       <section class="card-section">
@@ -191,6 +219,7 @@ $conn->close();
             </div>
         <?php endif; ?>
       </section>
+
       <footer class="site-footer">
         <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
       </footer>

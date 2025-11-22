@@ -65,6 +65,20 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $fechaFiltro);
 $stmt->execute();
 $resultado = $stmt->get_result();
+
+// ======================================
+// NUEVA VALIDACIÓN: NO HAY REGISTROS
+// ======================================
+$noHayResultados = ($resultado->num_rows === 0);
+
+// Si viene desde exportar y no hay registros → mensaje flotante
+if (isset($_GET['exportar']) && $noHayResultados) {
+    $_SESSION['mensaje'] = "No hay registros de quejas o sugerencias en esta fecha";
+    $_SESSION['tipo_mensaje'] = "error";
+    header("Location: QuejaSugerenciaAdministrador.php?fecha=".$fechaFiltro);
+    exit();
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -79,9 +93,17 @@ $resultado = $stmt->get_result();
 <body>
 
 <?php if (!empty($_SESSION['mensaje'])): ?>
-    <div class="alert-message <?= ($_SESSION['tipo_mensaje'] ?? "") === "error" ? "alert-error" : "alert-success" ?>">
-        <?= htmlspecialchars($_SESSION['mensaje']) ?>
-    </div>
+    <div id="mensajeFlotante" class="alert-message"><?= htmlspecialchars($_SESSION['mensaje']) ?></div>
+
+    <script>
+        let msg = document.getElementById("mensajeFlotante");
+        msg.classList.add("show");
+
+        setTimeout(() => {
+            msg.classList.remove("show");
+        }, 3000);
+    </script>
+
     <?php
         unset($_SESSION['mensaje']);
         unset($_SESSION['tipo_mensaje']);
@@ -163,8 +185,9 @@ $resultado = $stmt->get_result();
         <section class="user-table-section">
 
             <div class="table-actions">
-                <form method="GET" action="ExportarQuejaSugerenciaPorFecha.php" style="display:inline;">
+                <form method="GET" action="">
                     <input type="hidden" name="fecha" value="<?= htmlspecialchars($fechaFiltro) ?>">
+                    <input type="hidden" name="exportar" value="1">
                     <button type="submit" class="btn-primary">Exportar por Fecha</button>
                 </form>
 
@@ -203,7 +226,26 @@ $resultado = $stmt->get_result();
                             </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
-                        <tr><td colspan="5">Sin registros disponibles para <?= htmlspecialchars($fechaFiltro) ?></td></tr>
+
+                        <!-- MENSAJE EN TABLA CUANDO NO HAY REGISTROS -->
+                        <tr>
+                            <td colspan="5">
+                                Sin registros disponibles para <?= htmlspecialchars($fechaFiltro) ?>
+                            </td>
+                        </tr>
+
+                        <!-- MENSAJE FLOTANTE AUTOMÁTICO -->
+                        <script>
+                            let m = document.createElement("div");
+                            m.className = "alert-message show";
+                            m.textContent = "No hay registros de quejas o sugerencias en esta fecha";
+                            document.body.appendChild(m);
+
+                            setTimeout(() => {
+                                m.classList.remove("show");
+                            }, 3000);
+                        </script>
+
                     <?php endif; ?>
                 </tbody>
             </table>

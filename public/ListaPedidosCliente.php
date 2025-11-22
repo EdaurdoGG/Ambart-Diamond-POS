@@ -1,9 +1,10 @@
 <?php
 session_start();
 
-// Asegurarse de que haya sesión activa
-if (!isset($_SESSION['idPersona'])) {
-    die("Error: No hay sesión activa. Inicia sesión nuevamente.");
+// Verificar sesión activa y rol de cliente
+if (!isset($_SESSION['idPersona']) || ($_SESSION['rol'] ?? 0) != 3) { 
+    header("Location: Login.php");
+    exit();
 }
 
 $idPersona = $_SESSION['idPersona'];
@@ -17,6 +18,8 @@ $conn->query("SET @id_usuario_actual = " . intval($_SESSION['idPersona']));
 // Filtrado por fecha si se envía por GET
 $fechaFiltro = $_GET['fecha'] ?? null;
 
+$mensajeFlotante = ""; // <-- Nuevo: mensaje flotante
+
 // Si se envía una solicitud POST para cancelar
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['idPedido'])) {
     $idPedido = intval($_POST['idPedido']);
@@ -25,9 +28,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['idPedido'])) {
     $stmtCancel->bind_param("i", $idPedido);
 
     if ($stmtCancel->execute()) {
-        $mensaje = "Pedido #$idPedido cancelado exitosamente.";
+        $mensajeFlotante = "Pedido #$idPedido cancelado exitosamente.";
     } else {
-        $mensaje = "Error al cancelar el pedido: " . $stmtCancel->error;
+        $mensajeFlotante = "Error al cancelar el pedido.";
     }
 
     $stmtCancel->close();
@@ -99,6 +102,12 @@ while ($row = $result->fetch_assoc()) {
 
 $stmt->close();
 $conn->close();
+
+// Si buscó por fecha y no hubo resultados → mensaje flotante
+if ($fechaFiltro && empty($pedidos)) {
+    $mensajeFlotante = "No se encontraron pedidos en esa fecha.";
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -109,85 +118,66 @@ $conn->close();
   <title>Mis Pedidos</title>
   <link rel="stylesheet" href="ListaPedidosCliente.css">
   <link rel="icon" type="image/png" href="imagenes/Logo.png">
-  <style>
-    .mensaje {
-      background-color: #e6ffe6;
-      border: 1px solid #4caf50;
-      color: #2e7d32;
-      padding: 10px;
-      border-radius: 6px;
-      text-align: center;
-      margin-bottom: 15px;
-      font-weight: bold;
-    }
-    .error {
-      background-color: #ffe6e6;
-      border: 1px solid #f44336;
-      color: #b71c1c;
-    }
-  </style>
-</head>
 <body>
+
+<!-- MENSAJE FLOTANTE -->
+<?php if (!empty($mensajeFlotante)): ?>
+<div id="alerta" class="alert-message"><?= htmlspecialchars($mensajeFlotante) ?></div>
+<script>
+    const alerta = document.getElementById('alerta');
+    alerta.classList.add('show');
+    setTimeout(() => {
+        alerta.classList.remove('show');
+    }, 3000);
+</script>
+<?php endif; ?>
+
+
   <div class="dashboard-container">
+
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="logo">
         <img src="imagenes/Logo.png" alt="Logo" class="icon">
         <span>Amber Diamond</span>
       </div>
+
       <nav class="menu">
-        <a href="InicioCliente.php" class="menu-item">
-            <img src="imagenes/Inicio.png" alt="Inicio" class="icon"> Inicio
-        </a>
-        <a href="CarritoCliente.php" class="menu-item">
-            <img src="imagenes/Carrito.png" alt="Carrito" class="icon"> Carrito
-        </a>
-        <a href="ListaProductosCliente.php" class="menu-item">
-            <img src="imagenes/Productos.png" alt="Productos" class="icon"> Productos
-        </a>
-        <a href="ListaPedidosCliente.php" class="menu-item active">
-            <img src="imagenes/Pedidos.png" alt="Pedidos" class="icon"> Pedidos
-        </a>
-        <a href="QuejaSugerenciaCliente.php" class="menu-item">
-            <img src="imagenes/QuejasSujerencias.png" alt="Quejas" class="icon"> Quejas / Sugerencias
-        </a>
+        <a href="InicioCliente.php" class="menu-item"><img src="imagenes/Inicio.png" class="icon"> Inicio</a>
+        <a href="CarritoCliente.php" class="menu-item"><img src="imagenes/Carrito.png" class="icon"> Carrito</a>
+        <a href="ListaProductosCliente.php" class="menu-item"><img src="imagenes/Productos.png" class="icon"> Productos</a>
+        <a href="ListaPedidosCliente.php" class="menu-item active"><img src="imagenes/Pedidos.png" class="icon"> Pedidos</a>
+        <a href="QuejaSugerenciaCliente.php" class="menu-item"><img src="imagenes/QuejasSujerencias.png" class="icon"> Quejas / Sugerencias</a>
+
         <div class="menu-separator"></div>
-        <a href="Login.php" class="menu-item logout">
-            <img src="imagenes/salir.png" alt="Cerrar sesión" class="icon"> Cerrar sesión
-        </a>
+
+        <a href="Login.php" class="menu-item logout"><img src="imagenes/salir.png" class="icon"> Cerrar sesión</a>
       </nav>
     </aside>
 
     <!-- Contenido principal -->
     <main class="main-content">
-      <header class="topbar">
 
+      <header class="topbar">
         <div class="search-box">
           <form method="GET" action="">
             <input type="date" name="fecha" value="<?= isset($fechaFiltro) ? htmlspecialchars($fechaFiltro) : '' ?>">
             <button type="submit" class="search-button">
-              <img src="imagenes/Buscar.png" alt="Buscar" class="search-icon">
+              <img src="imagenes/Buscar.png" class="search-icon">
             </button>
           </form>
         </div>
 
         <div class="user-profile">
           <a href="EditarPerfilCliente.php">
-            <img src="<?php echo htmlspecialchars($imagenPerfil); ?>" alt="Avatar" class="avatar">
+            <img src="<?= htmlspecialchars($imagenPerfil) ?>" class="avatar">
           </a>
           <div class="user-info">
-            <span class="user-name"><?php echo htmlspecialchars($nombreCompleto); ?></span>
-            <span class="user-role"><?php echo htmlspecialchars($rol); ?></span>
+            <span class="user-name"><?= htmlspecialchars($nombreCompleto) ?></span>
+            <span class="user-role"><?= htmlspecialchars($rol) ?></span>
           </div>
         </div>
       </header>
-
-      <!-- Mensaje de acción -->
-      <?php if (isset($mensaje)): ?>
-        <div class="mensaje <?php echo strpos($mensaje, 'Error') !== false ? 'error' : ''; ?>">
-          <?php echo htmlspecialchars($mensaje); ?>
-        </div>
-      <?php endif; ?>
 
       <!-- Sección de pedidos -->
       <section class="card-section">
@@ -197,34 +187,34 @@ $conn->close();
           <?php foreach ($pedidos as $idPedido => $pedido): ?>
             <div class="card">
               <div class="card-info">
-                <h3>Pedido #<?php echo htmlspecialchars($idPedido); ?></h3>
-                <p><strong>Fecha:</strong> <?php echo htmlspecialchars($pedido['Fecha']); ?></p>
-                <p><strong>Estatus:</strong> <?php echo htmlspecialchars($pedido['Estatus']); ?></p>
+                <h3>Pedido #<?= htmlspecialchars($idPedido) ?></h3>
+                <p><strong>Fecha:</strong> <?= htmlspecialchars($pedido['Fecha']) ?></p>
+                <p><strong>Estatus:</strong> <?= htmlspecialchars($pedido['Estatus']) ?></p>
                 <hr>
 
                 <ul>
                   <?php foreach ($pedido['Productos'] as $producto): ?>
                     <li>
-                      <?php echo htmlspecialchars($producto['Producto']); ?> — 
-                      <?php echo intval($producto['Cantidad']); ?> × 
-                      $<?php echo number_format($producto['PrecioUnitario'], 2); ?> =
-                      $<?php echo number_format($producto['Total'], 2); ?>
+                      <?= htmlspecialchars($producto['Producto']) ?> — 
+                      <?= intval($producto['Cantidad']) ?> × 
+                      $<?= number_format($producto['PrecioUnitario'], 2) ?> =
+                      $<?= number_format($producto['Total'], 2) ?>
                     </li>
                   <?php endforeach; ?>
                 </ul>
 
                 <hr>
-                <p><strong>Total del pedido:</strong> $<?php echo number_format($pedido['TotalPedido'], 2); ?></p>
+                <p><strong>Total del pedido:</strong> $<?= number_format($pedido['TotalPedido'], 2) ?></p>
 
                 <div class="card-actions">
                   <?php if (strtolower($pedido['Estatus']) === 'pendiente'): ?>
-                    <form method="POST" action="" onsubmit="return confirm('¿Estás seguro de cancelar este pedido?');">
-                      <input type="hidden" name="idPedido" value="<?php echo $idPedido; ?>">
+                    <form method="POST" onsubmit="return confirm('¿Estás seguro de cancelar este pedido?');">
+                      <input type="hidden" name="idPedido" value="<?= $idPedido ?>">
                       <button type="submit" class="btn-secondary">Cancelar</button>
                     </form>
                   <?php else: ?>
-                    <span class="status <?php echo strtolower($pedido['Estatus']); ?>">
-                      <?php echo ucfirst(strtolower($pedido['Estatus'])); ?>
+                    <span class="status <?= strtolower($pedido['Estatus']) ?>">
+                      <?= ucfirst(strtolower($pedido['Estatus'])) ?>
                     </span>
                   <?php endif; ?>
                 </div>
@@ -233,6 +223,7 @@ $conn->close();
           <?php endforeach; ?>
         <?php endif; ?>
       </section>
+
       <footer class="site-footer">
         <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
       </footer>

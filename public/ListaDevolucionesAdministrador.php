@@ -78,7 +78,7 @@ if ($resultDevoluciones && $resultDevoluciones->num_rows > 0) {
         $id = $row['idDevolucion'];
         if (!isset($devoluciones[$id])) {
             $devoluciones[$id] = [
-                'Usuario' => $row['Usuario'],  // <-- nombre del usuario
+                'Usuario' => $row['Usuario'],
                 'Fecha' => $row['Fecha'],
                 'Motivo' => $row['Motivo'],
                 'Productos' => [],
@@ -102,6 +102,9 @@ $stmtDevoluciones->close();
   <link rel="icon" type="image/png" href="imagenes/Logo.png">
 </head>
 <body>
+
+<div id="alertMessage" class="alert-message"></div>
+
   <div class="dashboard-container">
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -176,13 +179,13 @@ $stmtDevoluciones->close();
 
       <!-- Sección de acciones -->
       <div class="table-actions">
-          <!-- Botón para exportar devoluciones filtradas por fecha -->
-          <form method="GET" action="ExportarDevolucionesPorFecha.php" style="display:inline;">
+          <!-- Exportar filtrado -->
+          <form id="exportarFechaForm" method="GET" action="ExportarDevolucionesPorFecha.php" style="display:inline;">
               <input type="hidden" name="fecha" value="<?= htmlspecialchars($fechaFiltro) ?>">
               <button type="submit" class="btn-primary">Exportar Devoluciones</button>
           </form>
 
-          <!-- Botón para exportar todas las devoluciones -->
+          <!-- Exportar todo -->
           <form method="GET" action="ExportarTodasLasDevoluciones.php" style="display:inline;">
               <button type="submit" class="btn-secondary">Exportar Todas las Devoluciones</button>
           </form>
@@ -213,11 +216,42 @@ $stmtDevoluciones->close();
           <?php endif; ?>
         </div>
       </section>
+
       <footer class="site-footer">
         <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
       </footer>
     </main>
   </div>
+
+<!-- ⭐ SCRIPT PARA MENSAJE FLOTANTE ⭐ -->
+<script>
+function showAlert(msg) {
+    const alertBox = document.getElementById("alertMessage");
+    alertBox.textContent = msg;
+    alertBox.classList.add("alert-show");
+
+    setTimeout(() => {
+        alertBox.classList.remove("alert-show");
+    }, 3000);
+}
+
+// ---- 1. SI SE BUSCÓ UNA FECHA Y NO HAY RESULTADOS ----
+<?php if (!empty($fechaFiltro) && empty($devoluciones)): ?>
+    showAlert("No hay devoluciones registradas en esta fecha");
+<?php endif; ?>
+
+// ---- 2. VALIDAR EXPORTACIÓN DE FECHA ----
+document.getElementById("exportarFechaForm").addEventListener("submit", function(e) {
+    const fecha = "<?= $fechaFiltro ?>";
+    const hayDatos = <?= empty($devoluciones) ? "false" : "true" ?>;
+
+    if (fecha === "" || !hayDatos) {
+        e.preventDefault();
+        showAlert("No hay devoluciones para exportar en esta fecha");
+    }
+});
+</script>
+
 </body>
 </html>
 

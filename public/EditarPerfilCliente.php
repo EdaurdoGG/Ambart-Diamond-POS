@@ -1,19 +1,20 @@
 <?php
 session_start();
 
-// Verificar que el usuario esté logeado
-if (!isset($_SESSION['idPersona'])) {
+// Verificar que el usuario esté logueado y sea administrador (rol = 3)
+if (!isset($_SESSION['idPersona']) || ($_SESSION['rol'] ?? 0) != 3) {
     header("Location: Login.php");
     exit();
 }
 
 $idPersona = $_SESSION['idPersona'];
 $mensaje = "";
+$error = false;
 
 // Conexión
 require_once "../includes/conexion.php";
 
-// Asignar el id del usuario logueado a la variable @id_usuario_actual
+// Asignar el id del usuario logueado
 $conn->query("SET @id_usuario_actual = " . intval($_SESSION['idPersona']));
 
 //  Obtener datos del usuario desde la vista
@@ -38,10 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizarInfo'])) {
 
     // Si se subió nueva foto
     if (isset($_FILES['Imagen']) && $_FILES['Imagen']['error'] === UPLOAD_ERR_OK) {
-        $fileTmpPath = $_FILES['Imagen']['tmp_name'];
+        $tmp = $_FILES['Imagen']['tmp_name'];
         $fileName = basename($_FILES['Imagen']['name']);
-        $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-        $newFileName = "perfil_" . $idPersona . "." . $fileExt;
+        $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $newFileName = "perfil_" . $idPersona . "." . $ext;
 
         $uploadDir = "Usuarios/";
         if (!is_dir($uploadDir)) {
@@ -49,26 +50,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizarInfo'])) {
         }
 
         $destPath = $uploadDir . $newFileName;
-        if (move_uploaded_file($fileTmpPath, $destPath)) {
+        if (move_uploaded_file($tmp, $destPath)) {
             $imagenNueva = $destPath;
         } else {
             $mensaje = "Error al subir la imagen.";
+            $error = true;
         }
     }
 
-    // Llamar procedimiento almacenado pasando la ruta de la imagen
+    // Actualizar información en BD
     $stmt = $conn->prepare("CALL ActualizarPerfilCliente(?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("issssss", $idPersona, $nombreNuevo, $apellidoPNuevo, $apellidoMNuevo, $emailNuevo, $telefonoNuevo, $imagenNueva);
+    $stmt->bind_param("issssss", 
+        $idPersona, 
+        $nombreNuevo, 
+        $apellidoPNuevo, 
+        $apellidoMNuevo, 
+        $emailNuevo, 
+        $telefonoNuevo, 
+        $imagenNueva
+    );
 
     if ($stmt->execute()) {
+        // Actualizar variables locales
         $nombre = $nombreNuevo;
         $apellidoP = $apellidoPNuevo;
         $apellidoM = $apellidoMNuevo;
         $email = $emailNuevo;
         $telefono = $telefonoNuevo;
-        $imagen = $imagenNueva; 
+        $imagen = $imagenNueva;
+
+        $mensaje = "Perfil actualizado correctamente.";
+        $error = false;
     } else {
-        $mensaje = "Error al actualizar el perfil: " . $stmt->error;
+        $mensaje = "Error al actualizar el perfil.";
+        $error = true;
     }
 
     $stmt->close();
@@ -76,7 +91,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizarInfo'])) {
 
 $conn->close();
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -86,44 +100,49 @@ $conn->close();
 <link rel="stylesheet" href="EditarPerfilCliente.css">
 <link rel="icon" type="image/png" href="imagenes/Logo.png">
 </head>
+
 <body>
+
+<?php if ($mensaje !== ""): ?>
+<div class="alert-message show <?php echo $error ? 'error' : 'success'; ?>">
+    <?php echo htmlspecialchars($mensaje); ?>
+</div>
+<?php endif; ?>
+
+<script>
+setTimeout(() => {
+    const msg = document.querySelector(".alert-message");
+    if (msg) msg.style.opacity = "0";
+}, 3000);
+</script>
+
 <div class="dashboard-container">
+
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="logo">
-      <img src="imagenes/Logo.png" alt="Logo" class="icon">
+      <img src="imagenes/Logo.png" class="icon">
       <span>Amber Diamond</span>
     </div>
+
     <nav class="menu">
-      <a href="InicioCliente.php" class="menu-item">
-          <img src="imagenes/Inicio.png" alt="Inicio" class="icon"> Inicio
-      </a>
-      <a href="CarritoCliente.php" class="menu-item">
-          <img src="imagenes/Carrito.png" alt="CarritoEmpleado" class="icon"> Carrito
-      </a>
-      <a href="ListaProductosCliente.php" class="menu-item">
-          <img src="imagenes/Productos.png" alt="Productos" class="icon"> Productos
-      </a>
-      <a href="ListaPedidosCliente.php" class="menu-item">
-          <img src="imagenes/Pedidos.png" alt="Pedidos" class="icon"> Pedidos
-      </a>
-      <a href="QuejaSugerenciaCliente.php" class="menu-item">
-          <img src="imagenes/QuejasSujerencias.png" alt="QuejasSujerencias" class="icon"> Quejas / Sugerencias
-      </a>
+      <a href="InicioCliente.php" class="menu-item"><img src="imagenes/Inicio.png" class="icon"> Inicio</a>
+      <a href="CarritoCliente.php" class="menu-item"><img src="imagenes/Carrito.png" class="icon"> Carrito</a>
+      <a href="ListaProductosCliente.php" class="menu-item"><img src="imagenes/Productos.png" class="icon"> Productos</a>
+      <a href="ListaPedidosCliente.php" class="menu-item"><img src="imagenes/Pedidos.png" class="icon"> Pedidos</a>
+      <a href="QuejaSugerenciaCliente.php" class="menu-item"><img src="imagenes/QuejasSujerencias.png" class="icon"> Quejas / Sugerencias</a>
       <div class="menu-separator"></div>
-      <a href="Login.php" class="menu-item logout">
-          <img src="imagenes/salir.png" alt="Cerrar sesión" class="icon"> Cerrar sesión
-      </a>
+      <a href="Login.php" class="menu-item logout"><img src="imagenes/salir.png" class="icon"> Cerrar sesión</a>
     </nav>
   </aside>
 
   <!-- Contenido principal -->
   <main class="main-content">
-    <!-- Barra superior -->
+
     <header class="topbar">
       <div class="user-profile">
         <a href="EditarPerfilCliente.php">
-          <img src="<?php echo htmlspecialchars(($imagen ?: 'imagenes/User.png') . '?t=' . time()); ?>" alt="Avatar" class="avatar">
+          <img src="<?php echo htmlspecialchars(($imagen ?: 'imagenes/User.png') . '?t=' . time()); ?>" class="avatar">
         </a>
         <div class="user-info">
           <span class="user-name"><?php echo htmlspecialchars("$nombre $apellidoP $apellidoM"); ?></span>
@@ -132,25 +151,17 @@ $conn->close();
       </div>
     </header>
 
-    <!-- Sección de perfil -->
+    <!-- Perfil -->
     <section class="profile-section">
 
-      <!-- Formulario completo: foto + datos -->
-      <form class="profile-form" method="POST" action="" enctype="multipart/form-data">
+      <form class="profile-form" method="POST" enctype="multipart/form-data">
         <h2>Editar Información del Usuario</h2>
 
-        <!-- Mensaje info -->
-        <?php if($mensaje != ""): ?>
-            <p style="color:green;"><?php echo htmlspecialchars($mensaje); ?></p>
-        <?php endif; ?>
-
-        <!-- Foto de perfil y botón para subir -->
         <div class="profile-header">
-          <img src="<?php echo htmlspecialchars(($imagen ?: 'imagenes/User.png') . '?t=' . time()); ?>" alt="Foto de perfil" class="profile-pic">
+          <img src="<?php echo htmlspecialchars(($imagen ?: 'imagenes/User.png') . '?t=' . time()); ?>" class="profile-pic">
           <input type="file" class="btn-secondary" name="Imagen" accept="image/*">
         </div>
 
-        <!-- Campos de información -->
         <div class="form-group">
           <label>Nombre</label>
           <input type="text" name="Nombre" value="<?php echo htmlspecialchars($nombre); ?>" required>
@@ -178,11 +189,15 @@ $conn->close();
 
         <button class="btn-primary" type="submit" name="actualizarInfo">Actualizar Información</button>
       </form>
+
     </section>
-      <footer class="site-footer">
-        <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
-      </footer>
+
+    <footer class="site-footer">
+      <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
+    </footer>
+
   </main>
+
 </div>
 </body>
 </html>

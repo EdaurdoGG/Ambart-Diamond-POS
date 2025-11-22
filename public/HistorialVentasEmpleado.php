@@ -70,6 +70,10 @@ while ($row = $resultDetalles->fetch_assoc()) {
 $stmtDetalles->close();
 
 $conn->close();
+
+// --- NUEVO: MENSAJE SI NO HAY RESULTADOS ---
+$mostrarMensaje = isset($_GET['fecha']) && empty($ventas);
+
 ?>
 
 <!DOCTYPE html>
@@ -82,6 +86,21 @@ $conn->close();
   <link rel="icon" type="image/png" href="imagenes/Logo.png">
 </head>
 <body>
+
+<?php if ($mostrarMensaje): ?>
+<div id="alerta" class="alert-message">No se encontraron ventas para esta fecha</div>
+
+<script>
+    setTimeout(() => {
+        document.getElementById("alerta").classList.add("show");
+    }, 200);
+
+    setTimeout(() => {
+        document.getElementById("alerta").classList.remove("show");
+    }, 3200);
+</script>
+<?php endif; ?>
+
   <div class="dashboard-container">
     <!-- Sidebar -->
     <aside class="sidebar">

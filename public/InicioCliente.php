@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-// Validar sesión
-if (!isset($_SESSION['idPersona'])) {
+// Verificar que el usuario esté logueado y sea cliente (rol = 3)
+if (!isset($_SESSION['idPersona']) || ($_SESSION['rol'] ?? 0) != 3) {
     header("Location: Login.php");
     exit();
 }
@@ -12,17 +12,18 @@ $idPersona = $_SESSION['idPersona'];
 // Conexión
 require_once "../includes/conexion.php";
 
-// Asignar el id del usuario logueado a la variable @id_usuario_actual
-$conn->query("SET @id_usuario_actual = " . intval($_SESSION['idPersona']));
+// Registrar id del usuario actual
+$conn->query("SET @id_usuario_actual = " . intval($idPersona));
 
-// Consulta usando la vista Vista_ClientesRegistrados
+/* =====================================================
+       OBTENER INFORMACIÓN DEL CLIENTE
+===================================================== */
 $stmt = $conn->prepare("SELECT * FROM ClientesRegistrados WHERE idCliente = ?");
 $stmt->bind_param("i", $idPersona);
 $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
-    // Usuario no encontrado o inactivo
     $usuario = [
         'Nombre' => 'Invitado',
         'ApellidoPaterno' => '',
@@ -34,13 +35,81 @@ if ($result->num_rows === 0) {
     $usuario = $result->fetch_assoc();
 }
 
-// Construir nombre completo y validar imagen
 $nombreCompleto = $usuario['Nombre'] . ' ' . $usuario['ApellidoPaterno'] . ' ' . $usuario['ApellidoMaterno'];
 $imagenUsuario = !empty($usuario['Imagen']) ? $usuario['Imagen'] : 'imagenes/User.png';
 $rolUsuario = $usuario['Rol'];
 
-// Liberar resultados
 $conn->next_result();
+
+/* =====================================================
+       KPI: PEDIDOS ACTIVOS
+===================================================== */
+$sqlActivos = "
+    SELECT COUNT(*) AS totalActivos
+    FROM PedidosCompletos
+    WHERE idCliente = ? AND Estatus = 'Activo';
+";
+$stmtActivos = $conn->prepare($sqlActivos);
+$stmtActivos->bind_param("i", $idPersona);
+$stmtActivos->execute();
+$pedidosActivos = $stmtActivos->get_result()->fetch_assoc()['totalActivos'] ?? 0;
+
+/* =====================================================
+       KPI: TOTAL GASTADO
+===================================================== */
+$sqlGastado = "
+    SELECT SUM(Total) AS totalGastado
+    FROM PedidosCompletos
+    WHERE idCliente = ? AND Estatus = 'Completado';
+";
+$stmtGastado = $conn->prepare($sqlGastado);
+$stmtGastado->bind_param("i", $idPersona);
+$stmtGastado->execute();
+$totalGastado = $stmtGastado->get_result()->fetch_assoc()['totalGastado'] ?? 0;
+
+/* =====================================================
+       KPI: PRODUCTOS EN CARRITO
+===================================================== */
+$sqlCarrito = "
+    SELECT COUNT(*) AS totalProductos
+    FROM VistaCarritoPorPersona
+    WHERE idPersona = ?;
+";
+$stmtCarrito = $conn->prepare($sqlCarrito);
+$stmtCarrito->bind_param("i", $idPersona);
+$stmtCarrito->execute();
+$productosCarrito = $stmtCarrito->get_result()->fetch_assoc()['totalProductos'] ?? 0;
+
+/* =====================================================
+       ULTIMAS 7 COMPRAS (PEDIDOS COMPLETADOS)
+===================================================== */
+$sqlUltimasCompras = "
+    SELECT idPedido, Producto, Total, Fecha
+    FROM PedidosCompletos
+    WHERE idCliente = ? AND Estatus = 'Completado'
+    ORDER BY Fecha DESC
+    LIMIT 7;
+";
+$stmtUltimas = $conn->prepare($sqlUltimasCompras);
+$stmtUltimas->bind_param("i", $idPersona);
+$stmtUltimas->execute();
+$ultimasCompras = $stmtUltimas->get_result();
+
+/* =====================================================
+       ULTIMOS 3 PEDIDOS (PROMOCIONES ACTUALES)
+===================================================== */
+$sqlUltimosPedidos = "
+    SELECT idPedido, Producto, Total, Fecha, Estatus
+    FROM PedidosCompletos
+    WHERE idCliente = ?
+    ORDER BY Fecha DESC
+    LIMIT 3;
+";
+$stmtPedidos = $conn->prepare($sqlUltimosPedidos);
+$stmtPedidos->bind_param("i", $idPersona);
+$stmtPedidos->execute();
+$ultimosPedidos = $stmtPedidos->get_result();
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -65,7 +134,7 @@ $conn->next_result();
               <img src="imagenes/Inicio.png" alt="Inicio" class="icon"> Inicio
           </a>
           <a href="CarritoCliente.php" class="menu-item">
-              <img src="imagenes/Carrito.png" alt="CarritoEmpleado" class="icon"> Carrito
+              <img src="imagenes/Carrito.png" alt="Carrito" class="icon"> Carrito
           </a>
           <a href="ListaProductosCliente.php" class="menu-item">
               <img src="imagenes/Productos.png" alt="Productos" class="icon"> Productos
@@ -74,7 +143,7 @@ $conn->next_result();
               <img src="imagenes/Pedidos.png" alt="Pedidos" class="icon"> Pedidos
           </a>
           <a href="QuejaSugerenciaCliente.php" class="menu-item">
-              <img src="imagenes/QuejasSujerencias.png" alt="QuejasSujerencias" class="icon"> Quejas / Sugerencias
+              <img src="imagenes/QuejasSujerencias.png" alt="Quejas" class="icon"> Quejas / Sugerencias
           </a>
           <div class="menu-separator"></div>
           <a href="Login.php" class="menu-item logout">
@@ -104,40 +173,56 @@ $conn->next_result();
       <section class="kpi-cards">
         <div class="card">
           <h3>Pedidos Activos</h3>
-          <p>5</p>
+          <p><?php echo $pedidosActivos; ?></p>
         </div>
+
         <div class="card">
-          <h3>Ofertas Disponibles</h3>
-          <p>3</p>
+          <h3>Productos en Carrito</h3>
+          <p><?php echo $productosCarrito; ?></p>
         </div>
+
         <div class="card">
           <h3>Total Gastado</h3>
-          <p>$2,450</p>
+          <p>$<?php echo number_format($totalGastado, 2); ?></p>
         </div>
       </section>
 
       <!-- Widgets -->
       <section class="dashboard-widgets">
+
+        <!-- Últimas compras -->
         <div class="widget">
           <h3>Últimas Compras</h3>
           <ul>
-            <li>Cuaderno Profesional - $120</li>
-            <li>Paquete de Lápices - $350</li>
-            <li>Agenda 2025 - $90</li>
+            <?php while ($row = $ultimasCompras->fetch_assoc()): ?>
+              <li>
+                <?php echo $row['Producto']; ?> - $<?php echo number_format($row['Total'], 2); ?> 
+                <br><small><?php echo $row['Fecha']; ?></small>
+              </li>
+            <?php endwhile; ?>
           </ul>
         </div>
+
+        <!-- Últimos pedidos -->
         <div class="widget">
-          <h3>Promociones Actuales</h3>
+          <h3>Pedidos Recientes</h3>
           <ul>
-            <li>20% de descuento en cuadernos</li>
-            <li>Compra 2 lápices, llévate 1 gratis</li>
-            <li>Envío gratis en pedidos mayores a $500</li>
+            <?php while ($row = $ultimosPedidos->fetch_assoc()): ?>
+              <li>
+                Pedido #<?php echo $row['idPedido']; ?> - <?php echo $row['Producto']; ?>
+                <br><strong>Estatus:</strong> <?php echo $row['Estatus']; ?>
+              </li>
+            <?php endwhile; ?>
           </ul>
         </div>
+
       </section>
+
+      <!-- Footer -->
       <footer class="site-footer">
         <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
       </footer>
+
     </main>
   </div>
 </body>

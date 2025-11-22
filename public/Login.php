@@ -14,36 +14,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Conexión
     require_once "../includes/conexion.php";
 
-    // Buscar usuario
-    $stmt = $conn->prepare("SELECT idPersona, Usuario, Contrasena, idRol FROM Persona WHERE Email = ?");
+    // Buscar usuario con su estatus
+    $stmt = $conn->prepare("SELECT idPersona, Usuario, Contrasena, idRol, Estatus 
+                            FROM Persona 
+                            WHERE Email = ?");
     $stmt->bind_param("s", $correo);
     $stmt->execute();
     $stmt->store_result();
 
-    // Asignar el id del usuario logueado a la variable @id_usuario_actual
-    if (isset($_SESSION['idPersona'])) {
-        $conn->query("SET @id_usuario_actual = " . intval($_SESSION['idPersona']));
-    }
-
     if ($stmt->num_rows > 0) {
-        $stmt->bind_result($idPersonaDB, $usuarioDB, $hashDB, $rol);
+
+        $stmt->bind_result($idPersonaDB, $usuarioDB, $hashDB, $rol, $estatus);
         $stmt->fetch();
 
-        if (password_verify($contrasena, $hashDB)) {
-            // Login correcto
+        // ❌ SI ESTÁ INACTIVO → NO ENTRA
+        if ($estatus === 'Inactivo') {
+            $mensaje = "Tu cuenta está inactiva. Contacta al administrador.";
+        }
+        // ✔ SI LA CONTRASEÑA ES CORRECTA Y ESTÁ ACTIVO
+        elseif (password_verify($contrasena, $hashDB)) {
+
             $_SESSION['idPersona'] = $idPersonaDB;
             $_SESSION['usuario'] = $usuarioDB;
             $_SESSION['rol'] = $rol;
 
-            // Redireccionar según rol
+            // Redirección según rol
             switch ($rol) {
-                case 1: // Administrador
+                case 1:
                     header("Location: InicioAdministradores.php");
                     exit();
-                case 2: // Empleado
+                case 2:
                     header("Location: InicioEmpleados.php");
                     exit();
-                case 3: // Cliente
+                case 3:
                     header("Location: InicioCliente.php");
                     exit();
                 default:
@@ -52,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $mensaje = "Contraseña incorrecta.";
         }
+
     } else {
         $mensaje = "Usuario no encontrado.";
     }
@@ -60,7 +64,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $conn->close();
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -107,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
   </div>
 
-  <!-- ✅ Script funcional para mostrar/ocultar contraseña -->
+  <!-- Script funcional para mostrar/ocultar contraseña -->
   <script>
     document.addEventListener("DOMContentLoaded", function() {
       const passwordInput = document.getElementById('Contrasena');
@@ -116,14 +119,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       toggleImg.addEventListener('click', function() {
         if (passwordInput.type === "password") {
           passwordInput.type = "text";
-          toggleImg.src = "Imagenes/eye-closed.png"; // 👁️ Cambia al icono de ojo cerrado
+          toggleImg.src = "Imagenes/eye-closed.png";
         } else {
           passwordInput.type = "password";
-          toggleImg.src = "Imagenes/eye-open.png"; // 👁️ Cambia al icono de ojo abierto
+          toggleImg.src = "Imagenes/eye-open.png";
         }
       });
     });
   </script>
+
   <footer class="site-footer">
     <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
   </footer>

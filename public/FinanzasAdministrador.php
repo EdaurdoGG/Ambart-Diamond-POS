@@ -32,7 +32,7 @@ $stmt->close();
 // Manejar filtro de fecha
 $fechaFiltro = $_GET['fecha'] ?? date('Y-m-d');
 
-// Consultar la vista VistaFinanzasPorFecha filtrando por fecha
+// Consultar vista filtrando por fecha
 $sqlFinanzas = "SELECT *
                 FROM VistaFinanzasPorFecha
                 WHERE DATE(FechaVenta) = ?
@@ -57,9 +57,11 @@ while ($row = $resultFinanzas->fetch_assoc()) {
         'Concepto' => 'Venta producto',
         'Tipo' => 'Ingreso',
         'Monto' => floatval($row['TotalVenta']),
-        'Estado' => 'Activa' // Puedes adaptarlo según el estatus de la venta
+        'Estado' => 'Activa'
     ];
 }
+
+$sinResultados = empty($movimientosRecientes); // *** NUEVO ***
 
 $gananciaNeta = $ingresos - $gastos;
 ?>
@@ -75,6 +77,24 @@ $gananciaNeta = $ingresos - $gastos;
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
+<?php if ($sinResultados): ?>
+<script>
+// Mostrar mensaje flotante cuando no hay resultados
+document.addEventListener("DOMContentLoaded", function() {
+    const msg = document.createElement("div");
+    msg.className = "alert-message show";
+    msg.textContent = "No hay registros financieros en esta fecha";
+    document.body.appendChild(msg);
+
+    setTimeout(() => {
+        msg.classList.remove("show");
+        setTimeout(() => msg.remove(), 400);
+    }, 3000);
+});
+</script>
+<?php endif; ?>
+
 <div class="dashboard-container">
   <aside class="sidebar">
       <div class="logo">
@@ -202,9 +222,11 @@ $gananciaNeta = $ingresos - $gastos;
         </tbody>
       </table>
     </section>
+
     <footer class="site-footer">
       <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
     </footer>
+
   </main>
 </div>
 
