@@ -264,3 +264,17 @@ SELECT
     f.Ganancia
 FROM Finanzas f
 INNER JOIN Venta v ON f.idVenta = v.idVenta;
+
+CREATE VIEW VistaNotificaciones AS
+SELECT 
+    n.idNotificacion,
+    n.idProducto,
+    p.Nombre AS NombreProducto,
+    p.Existencia,
+    p.MinimoInventario,
+    n.Mensaje,
+    n.Fecha
+FROM NotificacionInventario n
+INNER JOIN Producto p
+    ON n.idProducto = p.idProducto
+ORDER BY n.Fecha DESC;

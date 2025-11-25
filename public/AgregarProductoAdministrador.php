@@ -52,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $codigoBarra = $_POST['codigoBarra'] ?? '';
     $existencia = $_POST['existencia'] ?? 0;
     $idCategoria = $_POST['categoria'] ?? null;
+    $minimoInventario = $_POST['minimoInventario'] ?? 30; // valor default
     $imagenPath = '';
 
     // Manejo de imagen
@@ -77,19 +78,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Llamar procedimiento almacenado
     if ($mensaje === '') {
-        $stmt = $conn->prepare("CALL AgregarProducto(?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $conn->prepare("CALL AgregarProducto(?, ?, ?, ?, ?, ?, ?, ?)");
         if (!$stmt) {
             die("Error en prepare() del procedimiento: " . $conn->error);
         }
+
+        // s = string, d = double, i = int
         $stmt->bind_param(
-            "sddsiis",
+            "sddsii si",
             $nombreProducto,
             $precioCompra,
             $precioVenta,
             $codigoBarra,
             $existencia,
             $idCategoria,
-            $imagenPath
+            $imagenPath,
+            $minimoInventario
         );
 
         if ($stmt->execute()) {
@@ -196,6 +200,11 @@ $conn->close();
           <div class="form-group">
             <input type="number" id="existencia" name="existencia" placeholder=" " min="0" required>
             <label for="existencia">Existencia</label>
+          </div>
+
+          <div class="form-group">
+            <input type="number" id="minimoInventario" name="minimoInventario" placeholder=" " min="1" required>
+            <label for="minimoInventario">Mínimo en Inventario</label>
           </div>
 
           <div class="form-group">

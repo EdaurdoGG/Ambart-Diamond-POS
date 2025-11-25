@@ -53,6 +53,7 @@ CREATE TABLE Producto (
     Existencia INT NOT NULL CHECK (Existencia >= 0),
     idCategoria INT NOT NULL,
     Imagen VARCHAR(255),
+    MinimoInventario INT NOT NULL DEFAULT 30,
     FOREIGN KEY (idCategoria) REFERENCES Categoria(idCategoria)
         ON UPDATE CASCADE ON DELETE RESTRICT
 );
@@ -190,6 +191,15 @@ CREATE TABLE SugerenciaQueja (
     Descripcion VARCHAR(255) NOT NULL,
     Fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (idPersona) REFERENCES Persona(idPersona)
+        ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE NotificacionInventario (
+    idNotificacion INT AUTO_INCREMENT PRIMARY KEY,
+    idProducto INT NOT NULL,
+    Mensaje VARCHAR(255) NOT NULL,
+    Fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (idProducto) REFERENCES Producto(idProducto)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
 

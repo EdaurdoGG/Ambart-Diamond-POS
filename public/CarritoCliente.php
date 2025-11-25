@@ -11,84 +11,267 @@ if (!$idPersona) {
 // Conexión
 require_once "../includes/conexion.php";
 
-// Asignar el id del usuario logueado a variable MySQL
-$conn->query("SET @id_usuario_actual = " . intval($_SESSION['idPersona']));
+// Asignar el id del usuario logueado a variable MySQL (protección int)
+$idPersona = intval($idPersona);
+$conn->query("SET @id_usuario_actual = " . $idPersona);
 
-// Datos del cliente
+// Obtener información del cliente
 $stmtInfo = $conn->prepare("SELECT Nombre, ApellidoPaterno, ApellidoMaterno, Imagen, Rol FROM ClientesRegistrados WHERE idCliente = ?");
-$stmtInfo->bind_param("i", $idPersona);
-$stmtInfo->execute();
-$resultInfo = $stmtInfo->get_result();
-$cliente = $resultInfo->fetch_assoc();
-$stmtInfo->close();
+if ($stmtInfo) {
+    $stmtInfo->bind_param("i", $idPersona);
+    $stmtInfo->execute();
+    $resultInfo = $stmtInfo->get_result();
+    $cliente = $resultInfo->fetch_assoc();
+    $stmtInfo->close();
+} else {
+    $cliente = null;
+}
 
-$nombreCompleto = $cliente ? $cliente['Nombre'] . ' ' . $cliente['ApellidoPaterno'] . ' ' . $cliente['ApellidoMaterno'] : 'Cliente';
+$nombreCompleto = $cliente ? trim($cliente['Nombre'] . ' ' . $cliente['ApellidoPaterno'] . ' ' . $cliente['ApellidoMaterno']) : 'Cliente';
 $rol = $cliente ? $cliente['Rol'] : 'Cliente';
-$imagenPerfil = $cliente && $cliente['Imagen'] ? $cliente['Imagen'] : 'imagenes/User.png';
+$imagenPerfil = $cliente && !empty($cliente['Imagen']) ? $cliente['Imagen'] : 'imagenes/User.png';
 
-// Función para ejecutar procedimientos y retornar mensaje
-function ejecutarProcedimiento($conn, $sql, $mensajeExito = '', $mensajeError = 'Error en procedimiento') {
-    if ($conn->multi_query($sql)) {
-        do {
-            if ($result = $conn->store_result()) {
-                $result->free();
-            }
-        } while ($conn->more_results() && $conn->next_result());
-
-        if ($mensajeExito) {
-            $_SESSION['mensaje'] = $mensajeExito;
-            $_SESSION['tipo_mensaje'] = 'success';
+// Función segura para limpiar múltiples resultados de multi_query
+function limpiarResultados($conn) {
+    while ($conn->more_results() && $conn->next_result()) {
+        if ($res = $conn->store_result()) {
+            $res->free();
         }
-    } else {
-        $_SESSION['mensaje'] = $mensajeError . ': ' . $conn->error;
-        $_SESSION['tipo_mensaje'] = 'error';
     }
 }
 
-// Manejar acciones del carrito
-if (isset($_GET['accion'])) {
-    $accion = $_GET['accion'];
-    $idDetalle = $_GET['idDetalle'] ?? 0;
-    $cantidad = 1;
+// Función para ejecutar procedimientos o queries que usan multi_query
+function ejecutarProcedimiento($conn, $sql) {
+    if (!$conn->multi_query($sql)) {
+        return ['ok' => false, 'error' => $conn->error];
+    }
+    limpiarResultados($conn);
+    return ['ok' => true];
+}
 
-    if ($accion === 'sumar') {
-        ejecutarProcedimiento($conn, "CALL SumarCantidadCarrito($idDetalle, $cantidad)");
+// Función para mostrar mensajes y tipo (session)
+function setMensaje($texto, $tipo = 'success') {
+    $_SESSION['mensaje'] = $texto;
+    $_SESSION['tipo_mensaje'] = $tipo;
+}
+
+/*
+ * Manejo POST para actualizar cantidad manual (acción 'actualizar')
+ * Permite que al presionar ENTER en el input numérico se actualice la cantidad.
+ */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'actualizar') {
+    $idDetalle = intval($_POST['idDetalle'] ?? 0);
+    $nuevaCantidad = intval($_POST['nuevaCantidad'] ?? 0);
+
+    // Validación básica en servidor
+    if ($idDetalle <= 0 || $nuevaCantidad < 0) {
+        setMensaje("Datos inválidos para actualizar la cantidad.", "error");
+        header("Location: CarritoCliente.php");
+        exit();
     }
 
-    if ($accion === 'restar') {
-        ejecutarProcedimiento($conn, "CALL RestarCantidadCarrito($idDetalle, $cantidad)");
-    }
+    limpiarResultados($conn);
 
-    if ($accion === 'procesar') {
-        ejecutarProcedimiento($conn, "CALL CrearPedidoDesdeCarrito($idPersona)", 'Pedido realizado con éxito', 'Error al procesar pedido');
-    }
+    $stmtUpd = $conn->prepare("CALL ActualizarCantidadCarrito(?, ?)");
+    if ($stmtUpd) {
+        if ($stmtUpd->bind_param("ii", $idDetalle, $nuevaCantidad) && $stmtUpd->execute()) {
+            setMensaje("Cantidad actualizada correctamente.", "success");
+        } else {
+            // Error: intentar extraer info de existencia disponible
+            $error = $stmtUpd->error ?: $conn->error;
 
-    if ($accion === 'vaciar') {
-        ejecutarProcedimiento($conn, "CALL VaciarCarritoPorPersona($idPersona)", 'Carrito vaciado', 'No se pudo vaciar el carrito');
+            $max = 0;
+            $sqlMax = "
+                SELECT p.Existencia
+                FROM DetalleCarrito dc
+                JOIN Producto p ON p.idProducto = dc.idProducto
+                WHERE dc.idDetalleCarrito = ?
+                LIMIT 1
+            ";
+            $stmtMax = $conn->prepare($sqlMax);
+            if ($stmtMax) {
+                $stmtMax->bind_param("i", $idDetalle);
+                if ($stmtMax->execute()) {
+                    $resMax = $stmtMax->get_result();
+                    if ($resMax && $rowMax = $resMax->fetch_assoc()) {
+                        $max = intval($rowMax['Existencia']);
+                    }
+                }
+                $stmtMax->close();
+                limpiarResultados($conn);
+            }
+
+            if ($max > 0) {
+                setMensaje("No hay suficiente stock. Máximo disponible: $max.", "error");
+            } else {
+                if (!empty($error)) {
+                    if (preg_match('/(\d+)/', $error, $m)) {
+                        setMensaje("No hay suficiente stock. Máximo disponible: " . $m[1] . ".", "error");
+                    } else {
+                        setMensaje("No se pudo actualizar la cantidad: " . htmlspecialchars($error), "error");
+                    }
+                } else {
+                    setMensaje("No se pudo actualizar la cantidad.", "error");
+                }
+            }
+        }
+        $stmtUpd->close();
+        limpiarResultados($conn);
+    } else {
+        setMensaje("Error interno al preparar la actualización.", "error");
     }
 
     header("Location: CarritoCliente.php");
     exit();
 }
 
-//  Obtener productos del carrito
+/*
+ * BÚSQUEDA DE PRODUCTOS vía POST (igual lógica que en la versión empleado)
+ */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['busqueda'])) {
+    $busqueda = trim($_POST['busqueda']);
+    limpiarResultados($conn);
+
+    if (preg_match('/^\d+$/', $busqueda)) {
+        $stmt = $conn->prepare("CALL BuscarProductoPorCodigoBarra(?)");
+    } else {
+        $stmt = $conn->prepare("CALL BuscarProductoPorNombre(?)");
+    }
+
+    if (!$stmt) {
+        setMensaje("Error al preparar búsqueda.", "error");
+        header("Location: CarritoCliente.php");
+        exit();
+    }
+
+    $stmt->bind_param("s", $busqueda);
+    $stmt->execute();
+    $resultado = $stmt->get_result();
+
+    $anyAdded = false;
+    $anyError = false;
+    $errorMsg = "";
+
+    if ($resultado && $resultado->num_rows > 0) {
+        while ($prod = $resultado->fetch_assoc()) {
+            $idProducto = intval($prod['idProducto']);
+            limpiarResultados($conn);
+
+            $stmtAdd = $conn->prepare("CALL AgregarAlCarrito(?, ?)");
+            if ($stmtAdd) {
+                if ($stmtAdd->bind_param("ii", $idPersona, $idProducto) && $stmtAdd->execute()) {
+                    $anyAdded = true;
+                } else {
+                    $anyError = true;
+                    $err = $stmtAdd->error ?: $conn->error;
+
+                    if (stripos($err, 'stock') !== false || stripos($err, 'cantidad') !== false || stripos($err, 'max') !== false) {
+                        $errorMsg = "No se pudo agregar: alcanzado máximo disponible.";
+                    } else {
+                        $errorMsg = "Error al agregar producto.";
+                    }
+                }
+                $stmtAdd->close();
+                limpiarResultados($conn);
+            }
+        }
+
+        if ($anyAdded && !$anyError) {
+            setMensaje("Producto agregado.", "success");
+        } else {
+            setMensaje($errorMsg ?: "No se pudo agregar.", "error");
+        }
+
+        $stmt->close();
+        header("Location: CarritoCliente.php");
+        exit();
+    } else {
+        setMensaje("No se encontró el producto.", "error");
+        header("Location: CarritoCliente.php");
+        exit();
+    }
+}
+
+/*
+ * ACCIONES: SUMAR / RESTAR / PROCESAR / VACIAR (GET)
+ */
+if (isset($_GET['accion'])) {
+    $accion = $_GET['accion'];
+    $idDetalle = intval($_GET['idDetalle'] ?? 0);
+    $cantidad = 1;
+
+    switch ($accion) {
+        case 'sumar':
+            $res = ejecutarProcedimiento($conn, "CALL SumarCantidadCarrito($idDetalle, $cantidad)");
+            if (!$res['ok']) {
+                $msg = $res['error'];
+                if (stripos($msg, "stock") !== false || stripos($msg, "max") !== false) {
+                    setMensaje("Ya alcanzaste la cantidad máxima disponible.", "error");
+                } else {
+                    setMensaje("No se pudo incrementar la cantidad: " . htmlspecialchars($msg), "error");
+                }
+            }
+            break;
+
+        case 'restar':
+            $res = ejecutarProcedimiento($conn, "CALL RestarCantidadCarrito($idDetalle, $cantidad)");
+            if (!$res['ok']) {
+                $msg = $res['error'];
+                // mensajes heurísticos
+                if (stripos($msg, "min") !== false || stripos($msg, "0") !== false) {
+                    setMensaje("El producto fue retirado del carrito.", "error");
+                } else {
+                    setMensaje("No se pudo disminuir la cantidad: " . htmlspecialchars($msg), "error");
+                }
+            }
+            break;
+
+        case 'procesar':
+            // En la versión empleado se usa ProcesarVentaNormal; aquí usamos la misma lógica para consistencia
+            $res = ejecutarProcedimiento($conn, "CALL ProcesarVentaNormal($idPersona, 'Efectivo')");
+            if ($res['ok']) {
+                setMensaje("Venta procesada con éxito.", "success");
+            } else {
+                setMensaje("Error al procesar la venta: " . htmlspecialchars($res['error'] ?? ''), "error");
+            }
+            break;
+
+        case 'vaciar':
+            // Vaciar carrito de forma segura
+            $sql = "
+                DELETE dc FROM DetalleCarrito dc 
+                JOIN Carrito c ON dc.idCarrito = c.idCarrito 
+                WHERE c.idPersona = $idPersona;
+                DELETE FROM Carrito WHERE idPersona = $idPersona;
+            ";
+            $res = ejecutarProcedimiento($conn, $sql);
+            if ($res['ok']) {
+                setMensaje("Carrito vaciado.", "success");
+            } else {
+                setMensaje("Error al vaciar el carrito: " . htmlspecialchars($res['error'] ?? ''), "error");
+            }
+            break;
+    }
+
+    header("Location: CarritoCliente.php");
+    exit();
+}
+
+// OBTENER CARRITO
 $carrito = [];
-if ($stmt = $conn->prepare("CALL ObtenerCarritoPorPersona(?)")) {
+limpiarResultados($conn);
+
+$stmt = $conn->prepare("CALL ObtenerCarritoPorPersona(?)");
+if ($stmt) {
     $stmt->bind_param("i", $idPersona);
     $stmt->execute();
-    $result = $stmt->get_result();
-    while ($row = $result->fetch_assoc()) {
-        $carrito[] = $row;
-    }
+    $res = $stmt->get_result();
+    while ($r = $res->fetch_assoc()) $carrito[] = $r;
     $stmt->close();
+    limpiarResultados($conn);
 }
 
-// Calcular total del carrito
-$totalCarrito = 0;
-foreach ($carrito as $producto) {
-    $totalCarrito += $producto['Total'];
-}
-
+$totalCarrito = array_sum(array_column($carrito, 'Total'));
 $conn->close();
 ?>
 
@@ -100,6 +283,24 @@ $conn->close();
   <title>Carrito de Productos</title>
   <link rel="stylesheet" href="CarritoCliente.css">
   <link rel="icon" type="image/png" href="imagenes/Logo.png">
+  <script>
+    // Si se presiona Enter dentro de cualquier input con clase 'qty-input', se envía su formulario padre
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.qty-input').forEach(function(input) {
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    var val = parseInt(this.value, 10);
+                    if (isNaN(val) || val < 0) {
+                        alert('Ingresa una cantidad válida (0 o mayor).');
+                        return;
+                    }
+                    this.form.submit();
+                }
+            });
+        });
+    });
+  </script>
 </head>
 <body>
 
@@ -149,6 +350,7 @@ unset($_SESSION['tipo_mensaje']);
       <!-- Topbar -->
       <header class="topbar">
         <div class="search-box">
+
           <div class="resumen-compra">
             <div class="resumen-card">
               <h3>Resumen de Compra</h3>
@@ -175,10 +377,10 @@ unset($_SESSION['tipo_mensaje']);
 
       <!-- Botones principales -->
       <div class="table-actions">
-        <!-- Hacer Pedido -->
+        <!-- Procesar Venta / Hacer Pedido -->
         <form method="GET" action="CarritoCliente.php" style="display:inline-block;">
             <input type="hidden" name="accion" value="procesar">
-            <button type="submit" class="btn-primary">Hacer Pedido</button>
+            <button type="submit" class="btn-primary">Procesar Venta</button>
         </form>
 
         <!-- Vaciar Carrito -->
@@ -200,9 +402,32 @@ unset($_SESSION['tipo_mensaje']);
                 <p>Descripción corta del producto</p>
                 <span class="price">$<?= number_format($producto['Total'], 2) ?></span>
                 <div class="card-actions">
-                  <a class="btn-secondary" href="CarritoCliente.php?accion=sumar&idDetalle=<?= $producto['idDetalleCarrito'] ?>">Sumar</a>
-                  <span class="quantity"><?= $producto['Cantidad'] ?></span>
-                  <a class="btn-primary" href="CarritoCliente.php?accion=restar&idDetalle=<?= $producto['idDetalleCarrito'] ?>">Restar</a>
+                  <form method="GET" action="CarritoCliente.php" style="display:inline-block;">
+                      <input type="hidden" name="accion" value="sumar">
+                      <input type="hidden" name="idDetalle" value="<?= intval($producto['idDetalleCarrito']) ?>">
+                      <button type="submit" class="btn-secondary">Sumar</button>
+                  </form>
+
+                  <!-- Form para actualizar cantidad (presionar Enter para enviar) -->
+                  <form method="POST" action="CarritoCliente.php" style="display:inline-block; margin:0 8px;">
+                      <input type="hidden" name="accion" value="actualizar">
+                      <input type="hidden" name="idDetalle" value="<?= intval($producto['idDetalleCarrito']) ?>">
+                      <input
+                          type="number"
+                          name="nuevaCantidad"
+                          class="cantidad-input qty-input"
+                          value="<?= intval($producto['Cantidad']) ?>"
+                          min="0"
+                          title="Escribe la cantidad y presiona Enter"
+                          style="width:70px;"
+                      />
+                  </form>
+
+                  <form method="GET" action="CarritoCliente.php" style="display:inline-block;">
+                      <input type="hidden" name="accion" value="restar">
+                      <input type="hidden" name="idDetalle" value="<?= intval($producto['idDetalleCarrito']) ?>">
+                      <button type="submit" class="btn-primary">Restar</button>
+                  </form>
                 </div>
               </div>
             </div>

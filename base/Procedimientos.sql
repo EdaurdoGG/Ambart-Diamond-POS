@@ -89,11 +89,18 @@ CREATE PROCEDURE AgregarProducto(
     IN p_CodigoBarra VARCHAR(100),
     IN p_Existencia INT,
     IN p_idCategoria INT,
-    IN p_Imagen VARCHAR(255)
+    IN p_Imagen VARCHAR(255),
+    IN p_MinimoInventario INT
 )
 BEGIN
-    INSERT INTO Producto (Nombre, PrecioCompra, PrecioVenta, CodigoBarra, Existencia, idCategoria, Imagen)
-    VALUES (p_Nombre, p_PrecioCompra, p_PrecioVenta, p_CodigoBarra, p_Existencia, p_idCategoria, p_Imagen);
+    INSERT INTO Producto (
+        Nombre, PrecioCompra, PrecioVenta, CodigoBarra, 
+        Existencia, idCategoria, Imagen, MinimoInventario
+    )
+    VALUES (
+        p_Nombre, p_PrecioCompra, p_PrecioVenta, p_CodigoBarra,
+        p_Existencia, p_idCategoria, p_Imagen, p_MinimoInventario
+    );
 END $$
 
 CREATE PROCEDURE ActualizarProductoCompleto(
@@ -104,7 +111,8 @@ CREATE PROCEDURE ActualizarProductoCompleto(
     IN p_CodigoBarra VARCHAR(100),
     IN p_Existencia INT,
     IN p_idCategoria INT,
-    IN p_Imagen VARCHAR(255)
+    IN p_Imagen VARCHAR(255),
+    IN p_MinimoInventario INT
 )
 BEGIN
     UPDATE Producto
@@ -114,7 +122,8 @@ BEGIN
         CodigoBarra = p_CodigoBarra,
         Existencia = p_Existencia,
         idCategoria = p_idCategoria,
-        Imagen = p_Imagen
+        Imagen = p_Imagen,
+        MinimoInventario = p_MinimoInventario
     WHERE idProducto = p_idProducto;
 END $$
 
@@ -272,6 +281,50 @@ BEGIN
     JOIN DetalleCarrito dc ON c.idCarrito = dc.idCarrito
     WHERE c.idPersona = p_idPersona
     ORDER BY dc.NombreProducto;
+END $$
+
+CREATE PROCEDURE ActualizarCantidadCarrito(
+    IN p_idDetalleCarrito INT,
+    IN p_NuevaCantidad INT
+)
+BEGIN
+    DECLARE v_Existencia INT;
+    DECLARE v_idProducto INT;
+
+    -- Obtener el producto ligado al detalle
+    SELECT idProducto
+    INTO v_idProducto
+    FROM DetalleCarrito
+    WHERE idDetalleCarrito = p_idDetalleCarrito;
+
+    -- Si no existe el detalle, detenemos
+    IF v_idProducto IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El detalle del carrito no existe.';
+    END IF;
+
+    -- Obtener existencia del producto
+    SELECT Existencia
+    INTO v_Existencia
+    FROM Producto
+    WHERE idProducto = v_idProducto;
+
+    -- Si la nueva cantidad es 0 o menos, eliminar detalle
+    IF p_NuevaCantidad <= 0 THEN
+        DELETE FROM DetalleCarrito WHERE idDetalleCarrito = p_idDetalleCarrito;
+
+    -- Validar stock
+    ELSEIF p_NuevaCantidad > v_Existencia THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'No hay suficiente stock disponible.';
+
+    -- Si hay existencia suficiente, actualizar
+    ELSE
+        UPDATE DetalleCarrito
+        SET Cantidad = p_NuevaCantidad
+        WHERE idDetalleCarrito = p_idDetalleCarrito;
+    END IF;
+
 END $$
 
 CREATE PROCEDURE CrearPedidoDesdeCarrito(IN p_idPersona INT)

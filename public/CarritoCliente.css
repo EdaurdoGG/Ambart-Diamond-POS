@@ -403,6 +403,26 @@ body {
   100% { opacity: 0; transform: translate(-50%, -40%); }
 }
 
+.cantidad-input { 
+  width: 78px; 
+  padding: 8px 10px; 
+  text-align: center; 
+  border-radius: 999px; 
+  border: 1px solid rgba(120,80,30,0.25); 
+  box-shadow: 0 4px 10px rgba(120,80,30,0.08); 
+  background: linear-gradient(180deg, #fffaf5, #fff7f0); 
+  font-weight: 600; color: #5a2e08; 
+  transition: transform .08s ease, box-shadow .12s ease, border-color .12s; 
+  appearance: none; 
+} 
+
+.cantidad-input:focus { 
+  outline: none; 
+  transform: translateY(-1px); 
+  border-color: rgba(152,80,8,0.7); 
+  box-shadow: 0 8px 18px rgba(152,80,8,0.12); 
+}
+
 /* 🔹 Estilos Responsivos para Tablets y Celulares */
 @media (max-width: 1024px) {
   .dashboard-container {

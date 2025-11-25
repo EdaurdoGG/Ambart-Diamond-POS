@@ -34,7 +34,7 @@ function limpiarResultados($conn) {
     }
 }
 
-// Función para ejecutar procedimientos almacenados
+// Función para ejecutar procedimientos almacenados (usada en acciones GET que requieren multi_query)
 function ejecutarProcedimiento($conn, $sql) {
     if (!$conn->multi_query($sql)) {
         return ['ok' => false, 'error' => $conn->error];
@@ -43,7 +43,87 @@ function ejecutarProcedimiento($conn, $sql) {
     return ['ok' => true];
 }
 
-// BÚSQUEDA DE PRODUCTOS
+/*
+ * NUEVO: Manejo POST para actualizar cantidad manual (acción 'actualizar')
+ * Esto permite que al presionar ENTER en el input numérico se actualice la cantidad.
+ */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'actualizar') {
+    $idDetalle = intval($_POST['idDetalle'] ?? 0);
+    $nuevaCantidad = intval($_POST['nuevaCantidad'] ?? 0);
+
+    // Validación básica en servidor
+    if ($idDetalle <= 0 || $nuevaCantidad < 0) {
+        $_SESSION['mensaje'] = "Datos inválidos para actualizar la cantidad.";
+        $_SESSION['tipo_mensaje'] = "error";
+        header("Location: CarritoEmpleado.php");
+        exit();
+    }
+
+    limpiarResultados($conn);
+
+    $stmtUpd = $conn->prepare("CALL ActualizarCantidadCarrito(?, ?)");
+    if ($stmtUpd) {
+        if ($stmtUpd->bind_param("ii", $idDetalle, $nuevaCantidad) && $stmtUpd->execute()) {
+            // Si la ejecución fue exitosa, el procedimiento actualizó (o eliminó cuando cantidad <= 0)
+            $_SESSION['mensaje'] = "Cantidad actualizada correctamente.";
+            $_SESSION['tipo_mensaje'] = "success";
+        } else {
+            // Hubo un error: puede ser un SIGNAL desde el procedimiento con mensaje indicando el máximo
+            $error = $stmtUpd->error ?: $conn->error;
+
+            // Intentar obtener la existencia máxima real del producto ligado al detalle para informar al usuario
+            $max = 0;
+            $sqlMax = "
+                SELECT p.Existencia
+                FROM DetalleCarrito dc
+                JOIN Producto p ON p.idProducto = dc.idProducto
+                WHERE dc.idDetalleCarrito = ?
+                LIMIT 1
+            ";
+            $stmtMax = $conn->prepare($sqlMax);
+            if ($stmtMax) {
+                $stmtMax->bind_param("i", $idDetalle);
+                if ($stmtMax->execute()) {
+                    $resMax = $stmtMax->get_result();
+                    if ($resMax && $rowMax = $resMax->fetch_assoc()) {
+                        $max = intval($rowMax['Existencia']);
+                    }
+                }
+                $stmtMax->close();
+                limpiarResultados($conn);
+            }
+
+            // Si el mensaje contiene la palabra 'Máximo' o 'Max' o 'stock' tratamos de construir un mensaje claro
+            if ($max > 0) {
+                $_SESSION['mensaje'] = "No hay suficiente stock. Máximo disponible: $max.";
+                $_SESSION['tipo_mensaje'] = "error";
+            } else {
+                // Si no pudimos determinar el máximo, usar el error genérico o el mensaje del procedimiento (si existe)
+                if (!empty($error)) {
+                    // Si el procedimiento devolvió algo como "No hay suficiente stock. Máximo: X", intentar extraer número
+                    if (preg_match('/(\d+)/', $error, $m)) {
+                        $_SESSION['mensaje'] = "No hay suficiente stock. Máximo disponible: " . $m[1] . ".";
+                    } else {
+                        $_SESSION['mensaje'] = "No se pudo actualizar la cantidad: " . $error;
+                    }
+                } else {
+                    $_SESSION['mensaje'] = "No se pudo actualizar la cantidad.";
+                }
+                $_SESSION['tipo_mensaje'] = "error";
+            }
+        }
+        $stmtUpd->close();
+        limpiarResultados($conn);
+    } else {
+        $_SESSION['mensaje'] = "Error interno al preparar la actualización.";
+        $_SESSION['tipo_mensaje'] = "error";
+    }
+
+    header("Location: CarritoEmpleado.php");
+    exit();
+}
+
+// BÚSQUEDA DE PRODUCTOS (igual que antes)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['busqueda'])) {
     $busqueda = trim($_POST['busqueda']);
     limpiarResultados($conn);
@@ -112,7 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['busqueda'])) {
     }
 }
 
-// ACCIONES: SUMAR / RESTAR / PROCESAR / VACIAR
+// ACCIONES: SUMAR / RESTAR / PROCESAR / VACIAR (GET)
 if (isset($_GET['accion'])) {
     $accion = $_GET['accion'];
     $idDetalle = intval($_GET['idDetalle'] ?? 0);
@@ -203,6 +283,26 @@ $conn->close();
     <title>Carrito de Productos</title>
     <link rel="icon" type="image/png" href="imagenes/Logo.png">
     <link rel="stylesheet" href="CarritoEmpleado.css">
+    <script>
+        // Si se presiona Enter dentro de cualquier input con clase 'qty-input', se envía su formulario padre
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.qty-input').forEach(function(input) {
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        // evitar enviar si valor no es número o < 0
+                        var val = parseInt(this.value, 10);
+                        if (isNaN(val) || val < 0) {
+                            // mostrar mensaje sencillo en caso de client-side invalid
+                            alert('Ingresa una cantidad válida (0 o mayor).');
+                            return;
+                        }
+                        this.form.submit();
+                    }
+                });
+            });
+        });
+    </script>
 </head>
 <body>
 <?php if (!empty($_SESSION['mensaje'])): ?>
@@ -303,7 +403,21 @@ $conn->close();
                             <tr>
                                 <td><img src="<?= htmlspecialchars($producto['Imagen']) ?>" width="60" alt=""></td>
                                 <td><?= htmlspecialchars($producto['Producto']) ?></td>
-                                <td><?= intval($producto['Cantidad']) ?></td>
+                                <td>
+                                    <!-- Form para actualizar cantidad: se envía al presionar ENTER en el input -->
+                                    <form method="POST" action="CarritoEmpleado.php" style="margin:0;">
+                                        <input type="hidden" name="accion" value="actualizar">
+                                        <input type="hidden" name="idDetalle" value="<?= intval($producto['idDetalleCarrito']) ?>">
+                                       <input
+                                            type="number"
+                                            name="nuevaCantidad"
+                                            class="cantidad-input qty-input"
+                                            value="<?= intval($producto['Cantidad']) ?>"
+                                            min="0"
+                                            title="Escribe la cantidad y presiona Enter"
+                                        />
+                                    </form>
+                                </td>
                                 <td>$<?= number_format($producto['PrecioUnitario'], 2) ?></td>
                                 <td>$<?= number_format($producto['Total'], 2) ?></td>
                                 <td>
@@ -318,6 +432,7 @@ $conn->close();
                                             <input type="hidden" name="idDetalle" value="<?= $producto['idDetalleCarrito'] ?>">
                                             <button type="submit" class="btn-secondary">−</button>
                                         </form>
+                                        <!-- Nota: no hace falta botón para 'Cambiar' — se usa Enter en el input -->
                                     </div>
                                 </td>
                             </tr>

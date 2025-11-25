@@ -93,7 +93,10 @@ if (isset($_GET['exportar']) && $noHayResultados) {
 <body>
 
 <?php if (!empty($_SESSION['mensaje'])): ?>
-    <div id="mensajeFlotante" class="alert-message"><?= htmlspecialchars($_SESSION['mensaje']) ?></div>
+    <div id="mensajeFlotante" 
+         class="alert-message alert-<?= htmlspecialchars($_SESSION['tipo_mensaje']) ?>">
+        <?= htmlspecialchars($_SESSION['mensaje']) ?>
+    </div>
 
     <script>
         let msg = document.getElementById("mensajeFlotante");

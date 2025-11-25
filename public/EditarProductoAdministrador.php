@@ -33,12 +33,23 @@ if (!$idProducto) {
     die("ID de producto no proporcionado.");
 }
 
-$stmt = $conn->prepare("SELECT Nombre, PrecioCompra, PrecioVenta, CodigoBarra, Existencia, idCategoria, Imagen 
-                        FROM Producto 
-                        WHERE idProducto = ?");
+$stmt = $conn->prepare("
+    SELECT Nombre, PrecioCompra, PrecioVenta, CodigoBarra, Existencia, idCategoria, Imagen, MinimoInventario
+    FROM Producto 
+    WHERE idProducto = ?
+");
 $stmt->bind_param("i", $idProducto);
 $stmt->execute();
-$stmt->bind_result($nombreProducto, $precioCompra, $precioVenta, $codigoBarra, $existencia, $categoriaId, $imagenProducto);
+$stmt->bind_result(
+    $nombreProducto,
+    $precioCompra,
+    $precioVenta,
+    $codigoBarra,
+    $existencia,
+    $categoriaId,
+    $imagenProducto,
+    $minimoInventario
+);
 $stmt->fetch();
 $stmt->close();
 
@@ -60,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $codigoBarraPost = $_POST['codigoBarra'] ?? '';
     $existenciaPost = $_POST['existencia'] ?? 0;
     $categoriaPost = $_POST['categoria'] ?? null;
+    $minimoInventarioPost = $_POST['minimoInventario'] ?? 30;
 
     $imagenPath = $imagenProducto;
 
@@ -87,9 +99,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($mensaje === "") {
 
-        $stmt = $conn->prepare("CALL ActualizarProductoCompleto(?, ?, ?, ?, ?, ?, ?, ?)");
+        // LLAMADA AL NUEVO PROCEDIMIENTO ALMACENADO
+        $stmt = $conn->prepare("CALL ActualizarProductoCompleto(?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param(
-            "isddsiis",
+            "isddsiisi",
             $idProducto,
             $nombreProductoPost,
             $precioCompraPost,
@@ -97,7 +110,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $codigoBarraPost,
             $existenciaPost,
             $categoriaPost,
-            $imagenPath
+            $imagenPath,
+            $minimoInventarioPost
         );
 
         if ($stmt->execute()) {
@@ -111,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $existencia = $existenciaPost;
             $categoriaId = $categoriaPost;
             $imagenProducto = $imagenPath;
+            $minimoInventario = $minimoInventarioPost;
 
         } else {
             $mensaje = "Error al actualizar: " . $stmt->error;
@@ -239,6 +254,11 @@ $conn->close();
           <div class="form-group">
             <input type="number" id="existencia" name="existencia" min="0" required value="<?= htmlspecialchars($existencia) ?>">
             <label for="existencia">Existencia</label>
+          </div>
+
+          <div class="form-group">
+            <input type="number" id="minimoInventario" name="minimoInventario" min="1" required value="<?= htmlspecialchars($minimoInventario) ?>">
+            <label for="minimoInventario">Mínimo en Inventario</label>
           </div>
 
           <div class="form-group">

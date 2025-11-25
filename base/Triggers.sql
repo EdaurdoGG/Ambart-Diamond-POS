@@ -153,4 +153,42 @@ BEGIN
     END IF;
 END$$
 
+CREATE TRIGGER trg_crear_notificacion_inventario
+AFTER UPDATE ON Producto
+FOR EACH ROW
+BEGIN
+    -- Solo si el nuevo stock es menor o igual al mínimo
+    IF NEW.Existencia <= NEW.MinimoInventario THEN
+        
+        -- Evitar notificaciones duplicadas
+        IF NOT EXISTS (
+            SELECT 1 
+            FROM NotificacionInventario 
+            WHERE idProducto = NEW.idProducto
+        ) THEN
+        
+            INSERT INTO NotificacionInventario (idProducto, Mensaje)
+            VALUES (
+                NEW.idProducto,
+                CONCAT('El producto "', NEW.Nombre, '" ha alcanzado el mínimo de inventario. Existencia actual: ', NEW.Existencia)
+            );
+        
+        END IF;
+        
+    END IF;
+END$$
+
+CREATE TRIGGER trg_eliminar_notificacion_inventario
+AFTER UPDATE ON Producto
+FOR EACH ROW
+BEGIN
+    -- Si el nuevo inventario es mayor que el mínimo, eliminar notificación
+    IF NEW.Existencia > NEW.MinimoInventario THEN
+        
+        DELETE FROM NotificacionInventario
+        WHERE idProducto = NEW.idProducto;
+    
+    END IF;
+END$$
+
 DELIMITER ;

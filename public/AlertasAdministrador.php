@@ -34,9 +34,10 @@ $apellidoM = trim($apellidoM) ?: "";
 $rol = $rol ?: "Administrador";
 $imagen = $imagen ?: "imagenes/User.png";
 
-// Productos con bajo stock
-$resultadoStock = $conn->query("SELECT * FROM VistaProductosBajoStock");
-$productosBajoStock = $resultadoStock ? $resultadoStock->fetch_all(MYSQLI_ASSOC) : [];
+// Notificaciones de inventario (NUEVO)
+$resultadoNotificaciones = $conn->query("SELECT * FROM VistaNotificaciones");
+$notificaciones = $resultadoNotificaciones ? $resultadoNotificaciones->fetch_all(MYSQLI_ASSOC) : [];
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -98,6 +99,9 @@ $productosBajoStock = $resultadoStock ? $resultadoStock->fetch_all(MYSQLI_ASSOC)
       <header class="topbar">
         <h2>Notificaciones de Inventario</h2>
         <div class="user-profile">
+          <a href="ExportarProductosBajos.php">
+            <img src="imagenes/Descargas.png" class="icon notification">
+          </a>
           <a href="EditarPerfilAdministrador.php">
             <img src="<?= htmlspecialchars($imagen) ?>" alt="Avatar" class="avatar">
           </a>
@@ -110,22 +114,32 @@ $productosBajoStock = $resultadoStock ? $resultadoStock->fetch_all(MYSQLI_ASSOC)
 
       <!-- Notificaciones -->
       <section class="notifications-section">
-        <?php if (!empty($productosBajoStock)): ?>
-          <?php foreach ($productosBajoStock as $producto): ?>
+        <?php if (!empty($notificaciones)): ?>
+          <?php foreach ($notificaciones as $notif): ?>
             <div class="notification-card low-stock">
-              <h3>Producto: <?= htmlspecialchars($producto['Nombre']) ?></h3>
-              <p>Stock actual: <?= htmlspecialchars($producto['Existencia']) ?> unidades</p>
+
+              <h3>Producto: <?= htmlspecialchars($notif['NombreProducto']) ?></h3>
+
+              <p>Stock actual: <?= htmlspecialchars($notif['Existencia']) ?> unidades</p>
+              <p>Mínimo permitido: <?= htmlspecialchars($notif['MinimoInventario']) ?> unidades</p>
+
+              <p class="alert-message">
+                <?= htmlspecialchars($notif['Mensaje']) ?>
+              </p>
+
               <span class="alert">
-                <?= ($producto['Existencia'] <= 10) ? '⚠️ Stock crítico' : '⚠️ Stock bajo' ?>
+                <?= ($notif['Existencia'] <= $notif['MinimoInventario']) ? '⚠️ Stock por debajo del mínimo' : '' ?>
               </span>
+
             </div>
           <?php endforeach; ?>
         <?php else: ?>
           <div class="notification-card">
-            <h3>Todos los productos están con stock suficiente</h3>
+            <h3>No hay notificaciones de inventario por el momento</h3>
           </div>
         <?php endif; ?>
       </section>
+
       <footer class="site-footer">
         <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
       </footer>
