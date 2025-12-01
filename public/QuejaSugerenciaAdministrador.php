@@ -98,15 +98,6 @@ if (isset($_GET['exportar']) && $noHayResultados) {
         <?= htmlspecialchars($_SESSION['mensaje']) ?>
     </div>
 
-    <script>
-        let msg = document.getElementById("mensajeFlotante");
-        msg.classList.add("show");
-
-        setTimeout(() => {
-            msg.classList.remove("show");
-        }, 3000);
-    </script>
-
     <?php
         unset($_SESSION['mensaje']);
         unset($_SESSION['tipo_mensaje']);
@@ -240,13 +231,9 @@ if (isset($_GET['exportar']) && $noHayResultados) {
                         <!-- MENSAJE FLOTANTE AUTOMÁTICO -->
                         <script>
                             let m = document.createElement("div");
-                            m.className = "alert-message show";
+                            m.className = "alert-message alert-error"; // Color rojo correcto
                             m.textContent = "No hay registros de quejas o sugerencias en esta fecha";
                             document.body.appendChild(m);
-
-                            setTimeout(() => {
-                                m.classList.remove("show");
-                            }, 3000);
                         </script>
 
                     <?php endif; ?>

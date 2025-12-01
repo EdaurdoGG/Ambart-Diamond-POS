@@ -722,4 +722,51 @@ BEGIN
     END IF;
 END $$
 
+CREATE PROCEDURE AgregarCategoria(
+    IN p_Nombre VARCHAR(100),
+    IN p_Descripcion VARCHAR(200),
+    IN p_Imagen VARCHAR(255)
+)
+BEGIN
+    -- Validar duplicado
+    IF EXISTS (SELECT 1 FROM Categoria WHERE Nombre = p_Nombre) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El nombre de la categoría ya existe.';
+    END IF;
+
+    INSERT INTO Categoria (Nombre, Descripcion, Imagen)
+    VALUES (p_Nombre, p_Descripcion, p_Imagen);
+END $$
+
+CREATE PROCEDURE EditarCategoria(
+    IN p_idCategoria INT,
+    IN p_Nombre VARCHAR(100),
+    IN p_Descripcion VARCHAR(200),
+    IN p_Imagen VARCHAR(255)
+)
+BEGIN
+    -- Validar que exista la categoría
+    IF NOT EXISTS (SELECT 1 FROM Categoria WHERE idCategoria = p_idCategoria) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'La categoría no existe.';
+    END IF;
+
+    -- Validar que el nuevo nombre no esté repetido en otra categoría
+    IF EXISTS (
+        SELECT 1 
+        FROM Categoria 
+        WHERE Nombre = p_Nombre AND idCategoria <> p_idCategoria
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Ya existe otra categoría con ese nombre.';
+    END IF;
+
+    UPDATE Categoria
+    SET 
+        Nombre = p_Nombre,
+        Descripcion = p_Descripcion,
+        Imagen = p_Imagen
+    WHERE idCategoria = p_idCategoria;
+END $$
+
 DELIMITER ;

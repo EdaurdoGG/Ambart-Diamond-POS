@@ -247,12 +247,18 @@ SELECT
     p.PrecioVenta,
     p.CodigoBarra,
     p.Existencia,
+    p.MinimoInventario,
     c.Nombre AS Categoria,
-    p.Imagen
+    p.Imagen,
+    CASE
+        WHEN p.Existencia <= (p.MinimoInventario / 2) THEN 'Crítico'
+        WHEN p.Existencia < p.MinimoInventario THEN 'Bajo'
+    END AS NivelInventario
 FROM Producto p
 JOIN Categoria c ON p.idCategoria = c.idCategoria
-WHERE p.Existencia < 30
+WHERE p.Existencia < p.MinimoInventario
 ORDER BY p.Existencia ASC;
+
 
 CREATE OR REPLACE VIEW VistaFinanzasPorFecha AS
 SELECT
@@ -278,3 +284,11 @@ FROM NotificacionInventario n
 INNER JOIN Producto p
     ON n.idProducto = p.idProducto
 ORDER BY n.Fecha DESC;
+
+CREATE VIEW VistaCategoriasSinImagen AS
+SELECT 
+    idCategoria,
+    Nombre,
+    Descripcion
+FROM Categoria;
+

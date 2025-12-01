@@ -144,6 +144,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['busqueda'])) {
         <form action="ExportarListaProductos.php" method="GET">
           <button type="submit" class="btn-secondary">Exportar Productos</button>
         </form>
+        <form action="ListaCategoriasAdministrador.php" method="GET">
+          <button type="submit" class="btn-secondary">Categorias</button>
+        </form>
       </div>
 
       <!-- Catalogo de tarjetas -->

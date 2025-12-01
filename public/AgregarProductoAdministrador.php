@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // s = string, d = double, i = int
         $stmt->bind_param(
-            "sddsii si",
+            "sddsiisi",
             $nombreProducto,
             $precioCompra,
             $precioVenta,

@@ -332,32 +332,31 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  padding: 18px 35px;
+  padding: 16px 28px;
   border-radius: 12px;
-  font-size: 18px;
-  font-weight: bold;
+  font-size: 16px;
+  font-weight: 600;
   text-align: center;
-  color: white;
+  color: #fff;
   z-index: 99999;
   opacity: 0;
   animation: fadeInOut 3s ease forwards;
-  box-shadow: 0px 5px 18px rgba(0,0,0,0.3);
-  background: transparent;  /* ← CAMBIO IMPORTANTE */
+  box-shadow: 0px 6px 24px rgba(0,0,0,0.25);
 }
 
-.alert-message.alert-success { 
-  background-color: #28a745 !important; 
+.alert-success {
+  background-color: #28a745;
 }
 
-.alert-message.alert-error { 
-  background-color: #d9534f !important; 
+.alert-error {
+  background-color: #e74c3c;
 }
 
 @keyframes fadeInOut {
-  0% { opacity: 0; transform: translate(-50%, -60%); }
-  15% { opacity: 1; transform: translate(-50%, -50%); }
-  80% { opacity: 1; }
-  100% { opacity: 0; transform: translate(-50%, -40%); }
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* ===== Responsive ===== */

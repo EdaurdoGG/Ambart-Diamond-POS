@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// Verificar que el usuario esté logueado y sea administrador (rol = 1)
+// Verificar administrador
 if (!isset($_SESSION['idPersona']) || ($_SESSION['rol'] ?? 0) != 1) {
     header("Location: Login.php");
     exit();
@@ -12,70 +12,120 @@ $idPersona = $_SESSION['idPersona'];
 // Conexión
 require_once "../includes/conexion.php";
 
-// Asignar el id del usuario logueado a la variable @id_usuario_actual
-$conn->query("SET @id_usuario_actual = " . intval($_SESSION['idPersona']));
+// Helper para consultas
+function safe_query($conn, $sql) {
+    $res = $conn->query($sql);
+    if ($res === false) {
+        error_log("MySQL ERROR: (" . $conn->errno . ") " . $conn->error . " -- SQL: " . $sql);
+        return null;
+    }
+    return $res;
+}
 
-// Obtener información del administrador logueado
-$stmt = $conn->prepare("SELECT Nombre, ApellidoPaterno, ApellidoMaterno, Imagen, Rol 
-                        FROM AdministradoresRegistrados 
-                        WHERE idAdministrador = ?");
-$stmt->bind_param("i", $idPersona);
-$stmt->execute();
-$stmt->bind_result($nombre, $apellidoP, $apellidoM, $imagen, $rol);
-$stmt->fetch();
-$stmt->close();
+$conn->query("SET @id_usuario_actual = " . intval($idPersona));
 
-// Usuarios activos (administradores, empleados y clientes activos)
+/* ============================
+   DATOS DEL ADMINISTRADOR
+============================ */
+$stmt = $conn->prepare("
+    SELECT Nombre, ApellidoPaterno, ApellidoMaterno, Imagen, Rol 
+    FROM AdministradoresRegistrados 
+    WHERE idAdministrador = ?
+");
+
+if (!$stmt) {
+    $nombre="Administrador"; $apellidoP=""; $apellidoM=""; $imagen="imagenes/User.png"; $rol="Administrador";
+} else {
+    $stmt->bind_param("i", $idPersona);
+    $stmt->execute();
+    $stmt->bind_result($nombre, $apellidoP, $apellidoM, $imagen, $rol);
+    $stmt->fetch();
+    $stmt->close();
+
+    $nombre = trim($nombre) ?: "Administrador";
+    $apellidoP = trim($apellidoP) ?: "";
+    $apellidoM = trim($apellidoM) ?: "";
+    $rol = $rol ?: "Administrador";
+    $imagen = $imagen ?: "imagenes/User.png";
+}
+
+/* ============================
+   USUARIOS ACTIVOS
+============================ */
 $sqlUsuarios = "
 SELECT COUNT(*) AS TotalActivos FROM (
-    SELECT idAdministrador AS id FROM AdministradoresRegistrados WHERE Estado = 'Activo'
+    SELECT idAdministrador FROM AdministradoresRegistrados WHERE Estado = 'Activo'
     UNION ALL
-    SELECT idEmpleado AS id FROM EmpleadosRegistrados WHERE Estado = 'Activo'
+    SELECT idEmpleado FROM EmpleadosRegistrados WHERE Estado = 'Activo'
     UNION ALL
-    SELECT idCliente AS id FROM ClientesRegistrados WHERE Estado = 'Activo'
+    SELECT idCliente FROM ClientesRegistrados WHERE Estado = 'Activo'
 ) AS UsuariosActivos";
-$res = $conn->query($sqlUsuarios);
-$usuariosActivos = $res->fetch_assoc()['TotalActivos'] ?? 0;
 
-// Total de ventas del día actual
+$res = safe_query($conn, $sqlUsuarios);
+$usuariosActivos = ($res && $row=$res->fetch_assoc()) ? (int)$row['TotalActivos'] : 0;
+
+/* ============================
+   VENTAS DEL DÍA
+============================ */
 $sqlVentasDia = "
 SELECT IFNULL(SUM(Total), 0) AS TotalDia
 FROM VentasDiariasPorEmpleado
-WHERE Fecha = CURDATE()";
-$res = $conn->query($sqlVentasDia);
-$ventasDia = $res->fetch_assoc()['TotalDia'] ?? 0;
+WHERE Fecha = CURDATE()
+";
 
-// Inventario bajo
-$sqlInvBajo = "SELECT COUNT(*) AS Bajo FROM VistaProductosBajoStock";
-$res = $conn->query($sqlInvBajo);
-$inventarioBajo = $res->fetch_assoc()['Bajo'] ?? 0;
+$res = safe_query($conn, $sqlVentasDia);
+$ventasDia = ($res && $row=$res->fetch_assoc()) ? (float)$row['TotalDia'] : 0;
 
-// Pedidos pendientes
+/* ============================
+   INVENTARIO BAJO/CRÍTICO (KPI)
+   CORREGIDO
+============================ */
+$sqlInvBajo = "
+SELECT COUNT(*) AS TotalBajoCritico
+FROM VistaNotificaciones
+WHERE Existencia <= MinimoInventario
+";
+
+$res = safe_query($conn, $sqlInvBajo);
+$inventarioBajo = ($res && $row=$res->fetch_assoc()) ? (int)$row['TotalBajoCritico'] : 0;
+
+/* ============================
+   PEDIDOS PENDIENTES
+============================ */
 $sqlPedidosPend = "
-SELECT COUNT(DISTINCT idPedido) AS Pendientes 
-FROM PedidosCompletos 
-WHERE Estatus = 'Pendiente'";
-$res = $conn->query($sqlPedidosPend);
-$pedidosPendientes = $res->fetch_assoc()['Pendientes'] ?? 0;
+SELECT COUNT(DISTINCT idPedido) AS Pendientes
+FROM PedidosCompletos
+WHERE Estatus = 'Pendiente'
+";
 
+$res = safe_query($conn, $sqlPedidosPend);
+$pedidosPendientes = ($res && $row=$res->fetch_assoc()) ? (int)$row['Pendientes'] : 0;
+
+/* ============================
+   ÚLTIMAS 5 VENTAS
+============================ */
 $sqlUltimas = "
-SELECT Producto, Total 
-FROM VentasDiariasPorEmpleado 
-ORDER BY Fecha DESC, Hora DESC 
-LIMIT 5";
-$ultimasVentas = $conn->query($sqlUltimas);
+SELECT Producto, Total
+FROM VentasDiariasPorEmpleado
+ORDER BY Fecha DESC, Hora DESC
+LIMIT 5
+";
+$ultimasVentas = safe_query($conn, $sqlUltimas);
 
+/* ============================
+   INVENTARIO BAJO + CRÍTICO (LISTA)
+============================ */
 $sqlCritico = "
-SELECT Nombre, Existencia 
-FROM Producto 
-WHERE Existencia < 10 
-ORDER BY Existencia ASC 
-LIMIT 5";
-$inventarioCritico = $conn->query($sqlCritico);
+SELECT NombreProducto, Existencia, MinimoInventario
+FROM VistaNotificaciones
+WHERE Existencia <= MinimoInventario
+ORDER BY Existencia ASC
+LIMIT 5
+";
 
-$conn->close();
+$inventarioCritico = safe_query($conn, $sqlCritico);
+
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -85,64 +135,65 @@ $conn->close();
   <link rel="stylesheet" href="InicioAdministradores.css">
   <link rel="icon" type="image/png" href="imagenes/Logo.png">
 </head>
+
 <body>
   <div class="dashboard-container">
+
     <!-- Menú lateral -->
     <aside class="sidebar">
       <div class="logo">
-        <img src="imagenes/Logo.png" alt="Logo" class="icon">
+        <img src="imagenes/Logo.png" class="icon">
         <span>Amber Diamond</span>
       </div>
       <nav class="menu">
         <a href="InicioAdministradores.php" class="menu-item active">
-          <img src="imagenes/Inicio.png" alt="Inicio" class="icon"> Inicio
+          <img src="imagenes/Inicio.png" class="icon"> Inicio
         </a>
         <a href="ListaVentasAdministrador.php" class="menu-item">
-          <img src="imagenes/Ventas.png" alt="Ventas" class="icon"> Ventas
+          <img src="imagenes/Ventas.png" class="icon"> Ventas
         </a>
         <a href="ListaPedidosAdministrador.php" class="menu-item">
-          <img src="imagenes/Pedidos.png" alt="Pedidos" class="icon"> Pedidos
+          <img src="imagenes/Pedidos.png" class="icon"> Pedidos
         </a>
         <a href="ListaProductosAdministrador.php" class="menu-item">
-          <img src="imagenes/Productos.png" alt="Productos" class="icon"> Productos
+          <img src="imagenes/Productos.png" class="icon"> Productos
         </a>
         <a href="ListaClientesAdministrado.php" class="menu-item">
-          <img src="imagenes/Clientes.png" alt="Clientes" class="icon"> Clientes
+          <img src="imagenes/Clientes.png" class="icon"> Clientes
         </a>
         <a href="ListaEmpleadosAdministrador.php" class="menu-item">
-          <img src="imagenes/Empleados.png" alt="Empleados" class="icon"> Empleados
+          <img src="imagenes/Empleados.png" class="icon"> Empleados
         </a>
         <a href="ListaDevolucionesAdministrador.php" class="menu-item">
-          <img src="imagenes/Devoluciones.png" alt="Devoluciones" class="icon"> Devoluciones
+          <img src="imagenes/Devoluciones.png" class="icon"> Devoluciones
         </a>
         <a href="FinanzasAdministrador.php" class="menu-item">
-          <img src="imagenes/Finanzas.png" alt="Finanzas" class="icon"> Finanzas
+          <img src="imagenes/Finanzas.png" class="icon"> Finanzas
         </a>
         <a href="Auditorias.php" class="menu-item">
-          <img src="imagenes/Auditorias.png" alt="Auditorias" class="icon"> Control y Auditoría
+          <img src="imagenes/Auditorias.png" class="icon"> Control y Auditoría
         </a>
         <a href="QuejaSugerenciaAdministrador.php" class="menu-item">
-          <img src="imagenes/QuejasSujerencias.png" alt="QuejasSujerencias" class="icon"> QuejasSujerencias
+          <img src="imagenes/QuejasSujerencias.png" class="icon"> Quejas/Sugerencias
         </a>
         <div class="menu-separator"></div>
         <a href="Login.php" class="menu-item logout">
-          <img src="imagenes/salir.png" alt="Cerrar sesión" class="icon"> Cerrar sesión
+          <img src="imagenes/salir.png" class="icon"> Cerrar sesión
         </a>
       </nav>
     </aside>
 
-    <!-- Contenido principal -->
+    <!-- CONTENIDO PRINCIPAL -->
     <main class="main-content">
-      <!-- Barra superior -->
+
       <header class="topbar">
         <h2>Es un placer tenerte de vuelta</h2>
         <div class="user-profile">
           <a href="AlertasAdministrador.php">
-            <img src="imagenes/Notificasion.png" alt="Notificaciones" class="icon notification">
+            <img src="imagenes/Notificasion.png" class="icon notification">
           </a>
           <a href="EditarPerfilAdministrador.php">
-            <img src="<?php echo htmlspecialchars(($imagen ?: 'imagenes/User.png') . '?t=' . time()); ?>" 
-                 alt="Avatar" class="avatar"> 
+            <img src="<?php echo htmlspecialchars($imagen . '?t=' . time()); ?>" class="avatar">
           </a>
           <div class="user-info">
             <span class="user-name"><?php echo htmlspecialchars("$nombre $apellidoP $apellidoM"); ?></span>
@@ -153,46 +204,73 @@ $conn->close();
 
       <!-- KPIs -->
       <section class="kpi-cards">
+
         <div class="card">
           <h3>Usuarios Activos</h3>
           <p><?php echo $usuariosActivos; ?></p>
         </div>
+
         <div class="card">
           <h3>Ventas del Día</h3>
           <p>$<?php echo number_format($ventasDia, 2); ?></p>
         </div>
-        <div class="card">
-          <h3>Inventario Bajo</h3>
+
+        <!-- INVENTARIO BAJO/CRITICO -->
+        <div class="card <?php echo ($inventarioBajo > 0 ? 'alert-red' : ''); ?>">
+          <h3>Inventario Bajo/Crítico</h3>
           <p><?php echo $inventarioBajo; ?> Productos</p>
         </div>
+
         <div class="card">
           <h3>Pedidos Pendientes</h3>
           <p><?php echo $pedidosPendientes; ?></p>
         </div>
+
       </section>
 
-      <!-- Gráficos y actividad -->
+      <!-- Widgets -->
       <section class="dashboard-widgets">
+
+        <!-- Últimas ventas -->
         <div class="widget">
           <h3>Últimas Ventas</h3>
           <ul>
-            <?php while ($row = $ultimasVentas->fetch_assoc()): ?>
-              <li><?php echo htmlspecialchars($row['Producto']); ?> - $<?php echo number_format($row['Total'], 2); ?></li>
-            <?php endwhile; ?>
+            <?php if ($ultimasVentas && $ultimasVentas->num_rows > 0): ?>
+              <?php while ($row = $ultimasVentas->fetch_assoc()): ?>
+                <li><?php echo htmlspecialchars($row['Producto']); ?> - $<?php echo number_format($row['Total'], 2); ?></li>
+              <?php endwhile; ?>
+            <?php else: ?>
+              <li>No hay ventas recientes</li>
+            <?php endif; ?>
           </ul>
         </div>
+
+        <!-- Inventario Crítico/Bajo -->
         <div class="widget">
-          <h3>Inventario Crítico (menos de 9 unidades)</h3>
+          <h3>Inventario Bajo/Crítico</h3>
           <ul>
-            <?php while ($row = $inventarioCritico->fetch_assoc()): ?>
-              <li><?php echo htmlspecialchars($row['Nombre']); ?> - <?php echo $row['Existencia']; ?> unidades</li>
-            <?php endwhile; ?>
+            <?php if ($inventarioCritico && $inventarioCritico->num_rows > 0): ?>
+
+              <?php while ($row = $inventarioCritico->fetch_assoc()): ?>
+                <li>
+                  <strong><?php echo htmlspecialchars($row['NombreProducto']); ?></strong> —
+                  <?php echo $row['Existencia']; ?> unidades
+                  (<?php echo ($row['Existencia'] < $row['MinimoInventario']) ? "Crítico" : "Bajo"; ?>)
+                </li>
+              <?php endwhile; ?>
+
+            <?php else: ?>
+              <li>No hay productos críticos ni bajos</li>
+            <?php endif; ?>
           </ul>
         </div>
+
       </section>
+
       <footer class="site-footer">
         <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
       </footer>
+
     </main>
   </div>
 </body>
