@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
 }
 
 /*
- * BÚSQUEDA DE PRODUCTOS vía POST (igual lógica que en la versión empleado)
+ * BÚSQUEDA DE PRODUCTOS vía POST
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['busqueda'])) {
     $busqueda = trim($_POST['busqueda']);
@@ -201,6 +201,7 @@ if (isset($_GET['accion'])) {
     $cantidad = 1;
 
     switch ($accion) {
+
         case 'sumar':
             $res = ejecutarProcedimiento($conn, "CALL SumarCantidadCarrito($idDetalle, $cantidad)");
             if (!$res['ok']) {
@@ -217,7 +218,6 @@ if (isset($_GET['accion'])) {
             $res = ejecutarProcedimiento($conn, "CALL RestarCantidadCarrito($idDetalle, $cantidad)");
             if (!$res['ok']) {
                 $msg = $res['error'];
-                // mensajes heurísticos
                 if (stripos($msg, "min") !== false || stripos($msg, "0") !== false) {
                     setMensaje("El producto fue retirado del carrito.", "error");
                 } else {
@@ -227,17 +227,16 @@ if (isset($_GET['accion'])) {
             break;
 
         case 'procesar':
-            // En la versión empleado se usa ProcesarVentaNormal; aquí usamos la misma lógica para consistencia
-            $res = ejecutarProcedimiento($conn, "CALL ProcesarVentaNormal($idPersona, 'Efectivo')");
+            // ⚠ AHORA CREA UN PEDIDO EN VEZ DE HACER UNA VENTA
+            $res = ejecutarProcedimiento($conn, "CALL CrearPedidoDesdeCarrito($idPersona)");
             if ($res['ok']) {
-                setMensaje("Venta procesada con éxito.", "success");
+                setMensaje("Pedido creado con éxito.", "success");
             } else {
-                setMensaje("Error al procesar la venta: " . htmlspecialchars($res['error'] ?? ''), "error");
+                setMensaje("Error al crear el pedido: " . htmlspecialchars($res['error'] ?? ''), "error");
             }
             break;
 
         case 'vaciar':
-            // Vaciar carrito de forma segura
             $sql = "
                 DELETE dc FROM DetalleCarrito dc 
                 JOIN Carrito c ON dc.idCarrito = c.idCarrito 
@@ -347,7 +346,6 @@ unset($_SESSION['tipo_mensaje']);
 
     <!-- Main content -->
     <main class="main-content">
-      <!-- Topbar -->
       <header class="topbar">
         <div class="search-box">
 
@@ -377,13 +375,11 @@ unset($_SESSION['tipo_mensaje']);
 
       <!-- Botones principales -->
       <div class="table-actions">
-        <!-- Procesar Venta / Hacer Pedido -->
         <form method="GET" action="CarritoCliente.php" style="display:inline-block;">
             <input type="hidden" name="accion" value="procesar">
-            <button type="submit" class="btn-primary">Procesar Venta</button>
+            <button type="submit" class="btn-primary">Crear Pedido</button>
         </form>
 
-        <!-- Vaciar Carrito -->
         <form method="GET" action="CarritoCliente.php" style="display:inline-block;">
             <input type="hidden" name="accion" value="vaciar">
             <button type="submit" class="btn-secondary">Limpiar Carrito</button>
@@ -408,7 +404,6 @@ unset($_SESSION['tipo_mensaje']);
                       <button type="submit" class="btn-secondary">Sumar</button>
                   </form>
 
-                  <!-- Form para actualizar cantidad (presionar Enter para enviar) -->
                   <form method="POST" action="CarritoCliente.php" style="display:inline-block; margin:0 8px;">
                       <input type="hidden" name="accion" value="actualizar">
                       <input type="hidden" name="idDetalle" value="<?= intval($producto['idDetalleCarrito']) ?>">
@@ -436,9 +431,11 @@ unset($_SESSION['tipo_mensaje']);
           <p>El carrito está vacío.</p>
         <?php endif; ?>
       </section>
+
       <footer class="site-footer">
         <p>&copy; 2025 <strong>Diamonds Corporation</strong> Todos los derechos reservados.</p>
       </footer>
+
     </main>
   </div>
 </body>
